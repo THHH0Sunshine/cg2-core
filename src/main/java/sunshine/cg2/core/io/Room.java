@@ -27,8 +27,8 @@ public class Room implements IO {
 			for(int i=0;i<ds.length;i++)ds[i]=new CardSet("cg2:hero0",d);
 			GameManager g=new GameManager(new GamePackage(new CardPackage[]{Cards.BASIC_CARDS},null),Rules.HEARTHSTONE,ds,Room.this);
 			g.run();
-			started=false;
 			for(Client c:clients)c.send("{stop:true}");
+			started=false;
 		}
 	}
 	
@@ -45,7 +45,8 @@ public class Room implements IO {
 	
 	public void leave(Client client)
 	{
-		if(client==null||started)return;//if started 'turn into a computer'
+		if(client==null)return;
+		if(started)postMessage(client,new byte[]{0});//if started 'turn into a computer'
 		clients.remove(client);
 	}
 	
@@ -61,6 +62,7 @@ public class Room implements IO {
 	public boolean start(Client client)
 	{
 		if(client==null||started||clients.size()<min||!clients.contains(client))return false;
+		queue.clear();
 		started=true;
 		new Thread(new GameThread()).start();
 		return true;

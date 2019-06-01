@@ -99,23 +99,10 @@ public class Game {
 	
 	RMsg getRMsg(byte index)
 	{
-		switch(index)
-		{
-		case 1:
-			return RMsg.ATTACK;
-		case 2:
-			return RMsg.CHOOSE;
-		case 3:
-			return RMsg.CONCEDE;
-		case 4:
-			return RMsg.ENDTURN;
-		case 5:
-			return RMsg.PLAYHAND;
-		case 6:
-			return RMsg.USESKILL;
-		default:
+		RMsg[] all=RMsg.values();
+		if(index<0||index>=all.length)
 			return RMsg.NULL;
-		}
+		return all[index];
 	}
 	
 	IO.Reply recv()
