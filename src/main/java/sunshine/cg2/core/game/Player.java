@@ -66,7 +66,7 @@ public class Player {
 		if(game.getCurrentPlayer()==this)
 		{
 			int batk=old==null?0:(old.getAtk()<0?0:old.getAtk()),aatk=card.getAtk()<0?0:card.getAtk();
-			if(batk!=aatk)hero.pp(aatk-batk,0,false);//�غ���װ�������������ʵ�ʹ������ı���ı�Ӣ�۹�����
+			if(batk!=aatk)hero.pp(aatk-batk,0,false);
 		}
 		if(old!=null)breakWeapon(old);
 	}
@@ -154,7 +154,7 @@ public class Player {
 		game.broadcast(Game.Msg.TURN,new JSONObject(new Object[][]{{"who",index}}),-1);
 		gainEmptyCoins(rule.getCoinNum(pos,round),false);
 		fillCoins(maxCoins);
-		if(weapon.getAtk()>0)hero.pp(weapon.getAtk(),0,false);
+		if(weapon!=null&&weapon.getAtk()>0)hero.pp(weapon.getAtk(),0,false);
 		hero.resetWind();
 		if(skill!=null)skill.resetWind();
 		draw(rule.getDrawNum(pos,round));
@@ -317,7 +317,7 @@ public class Player {
 		}
 		game.triggerEvent(new AfterTurnEndEvent(this));
 		loseEmptyCoins(extraCoins);
-		if(weapon.getAtk()>0)hero.pp(-weapon.getAtk(),0,false);
+		if(weapon!=null&&weapon.getAtk()>0)hero.pp(-weapon.getAtk(),0,false);
 		for(int i=-1;i<field.size();i++)
 		{
 			Card c=i<0?hero:field.get(i);
@@ -554,7 +554,7 @@ public class Player {
 		if(weapon==null)return;
 		Card old=weapon;
 		weapon=null;
-		if(game.getCurrentPlayer()==this&&old.getAtk()>0)hero.pp(-old.getAtk(),0,false);//�ڻغ���ʧȥ�й�������������ı�Ӣ�۹�����
+		if(game.getCurrentPlayer()==this&&old.getAtk()>0)hero.pp(-old.getAtk(),0,false);
 		breakWeapon(old);
 	}
 }

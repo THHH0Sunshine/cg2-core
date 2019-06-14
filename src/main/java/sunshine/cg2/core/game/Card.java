@@ -300,7 +300,7 @@ public class Card {
 		if(position==Position.EQUIP&&game.getCurrentPlayer()==owner)
 		{
 			int aatk=this.atk<0?0:this.atk;
-			if(batk!=aatk)owner.getHero().pp(aatk-batk,0,false);//������������ڻغ��ڲ���ʵ�ʹ������仯��ı�Ӣ�۹�����
+			if(batk!=aatk)owner.getHero().pp(aatk-batk,0,false);
 		}
 		maxHP+=HP;
 		if(HP>0)this.HP+=HP;
