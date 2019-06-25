@@ -5,7 +5,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import sunshine.cg2.core.game.CardPackage;
 import sunshine.cg2.core.game.CardSet;
-import sunshine.cg2.core.game.GameManager;
+import sunshine.cg2.core.game.Game;
 import sunshine.cg2.core.game.GamePackage;
 import sunshine.cg2.core.game.IO;
 import sunshine.cg2.core.library.Cards;
@@ -25,7 +25,7 @@ public class Room implements IO {
 			for(int i=0;i<d.length/2;i++)d[i]="cg2:minion0";
 			for(int i=d.length/2;i<d.length;i++)d[i]="hs.basic:zlzc";
 			for(int i=0;i<ds.length;i++)ds[i]=new CardSet("cg2:hero0",d);
-			GameManager g=new GameManager(new GamePackage(new CardPackage[]{Cards.BASIC_CARDS},null),Rules.HEARTHSTONE,ds,Room.this);
+			Game g=new Game(new GamePackage(new CardPackage[]{Cards.BASIC_CARDS}),Rules.HEARTHSTONE,ds,Room.this);
 			g.run();
 			for(Client c:clients)c.send("{stop:true}");
 			started=false;

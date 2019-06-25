@@ -79,19 +79,6 @@ public class Game {
 	private int round;
 	private int number;
 	
-	Game(GamePackage pack,Rule rule,CardSet[] sets,IO io)
-	{
-		int len=sets.length;
-		this.io=io;
-		this.pack=pack;
-		this.rule=rule;
-		players=new Player[len];
-		for(int i=0;i<len;i++)
-		{
-			players[i]=new Player(this,i,sets[i].hero,sets[i].cards.clone());
-		}
-	}
-	
 	void broadcast(Msg msg,JSONObject jsonobj,int except)
 	{
 		for(int i=0;i<players.length;i++)if(i!=except)sendto(i,msg,jsonobj);
@@ -126,63 +113,6 @@ public class Game {
 		return number++;
 	}
 	
-	void run()
-	{
-		first=rule.chooseFirst(players.length);
-		for(int i=0;i<players.length;i++)
-		{
-			sendto(i,Msg.SEATS,new JSONObject(new Object[][]{{"num",players.length},{"self",i},{"first",first}}));
-		}
-		GameOverThrowable gameOver=null;
-		for(int i=0;i<players.length;i++)
-		{
-			gameOver=players[i].init();
-			if(gameOver!=null)break;
-		}
-		if(gameOver==null)
-		{
-			boolean[] fs=new boolean[players.length];
-			boolean conc=false;
-			for(int i=0;i<players.length;i++)
-			{
-				IO.Reply rep=recv();
-				if(getRMsg(rep.data[0])==RMsg.CONCEDE)conc=true;
-				if(fs[rep.who]||conc)
-				{
-					players[rep.who].getHero().kill();
-					gameOver=new GameOverThrowable(conc?GameOverThrowable.Type.CONCEDE:GameOverThrowable.Type.LEFT);
-					break;
-				}
-				else fs[rep.who]=true;
-				gameOver=players[rep.who].prepareFirst(rep.data);
-				if(gameOver!=null)break;
-			}
-		}
-		if(gameOver==null)
-		{
-			round=1;
-			current=first;
-			broadcast(Msg.GAMESTART,null,-1);
-			while(round<=rule.maxRounds)
-			{
-				try
-				{
-					players[current].doTurn();
-				}
-				catch(GameOverThrowable e)
-				{
-					gameOver=e;
-					break;
-				}
-				current++;
-				if(current>=players.length)current=0;
-				if(current==first)System.out.println("====ROUND "+(++round)+"====");//?
-			}
-		}
-		System.out.println("====GAME OVER====\ntype="+(gameOver==null?"DRAW":gameOver.type));//game over
-		for(int i=0;i<players.length;i++)System.out.println("player"+i+":\n\tlose="+players[i].getHero().isDying());//game over
-	}
-	
 	void sendto(int to,Msg msg,JSONObject jsonobj)
 	{
 		String name=msg.name();
@@ -195,6 +125,19 @@ public class Game {
 	void unregisterOnTable(Card c)
 	{
 		table.remove(c);
+	}
+	
+	public Game(GamePackage pack,Rule rule,CardSet[] sets,IO io)
+	{
+		int len=sets.length;
+		this.io=io;
+		this.pack=pack;
+		this.rule=rule;
+		players=new Player[len];
+		for(int i=0;i<len;i++)
+		{
+			players[i]=new Player(this,i,sets[i].hero,sets[i].cards.clone());
+		}
 	}
 	
 	public int checkForDeath(boolean completely) throws GameOverThrowable
@@ -283,6 +226,63 @@ public class Game {
 	public void registerEvents(Buff buff,Class<? extends Event> select)
 	{
 		eventHandler.register(buff,select);
+	}
+	
+	public void run()
+	{
+		first=rule.chooseFirst(players.length);
+		for(int i=0;i<players.length;i++)
+		{
+			sendto(i,Msg.SEATS,new JSONObject(new Object[][]{{"num",players.length},{"self",i},{"first",first}}));
+		}
+		GameOverThrowable gameOver=null;
+		for(int i=0;i<players.length;i++)
+		{
+			gameOver=players[i].init();
+			if(gameOver!=null)break;
+		}
+		if(gameOver==null)
+		{
+			boolean[] fs=new boolean[players.length];
+			boolean conc=false;
+			for(int i=0;i<players.length;i++)
+			{
+				IO.Reply rep=recv();
+				if(getRMsg(rep.data[0])==RMsg.CONCEDE)conc=true;
+				if(fs[rep.who]||conc)
+				{
+					players[rep.who].getHero().kill();
+					gameOver=new GameOverThrowable(conc?GameOverThrowable.Type.CONCEDE:GameOverThrowable.Type.LEFT);
+					break;
+				}
+				else fs[rep.who]=true;
+				gameOver=players[rep.who].prepareFirst(rep.data);
+				if(gameOver!=null)break;
+			}
+		}
+		if(gameOver==null)
+		{
+			round=1;
+			current=first;
+			broadcast(Msg.GAMESTART,null,-1);
+			while(round<=rule.maxRounds)
+			{
+				try
+				{
+					players[current].doTurn();
+				}
+				catch(GameOverThrowable e)
+				{
+					gameOver=e;
+					break;
+				}
+				current++;
+				if(current>=players.length)current=0;
+				if(current==first)System.out.println("====ROUND "+(++round)+"====");//?
+			}
+		}
+		System.out.println("====GAME OVER====\ntype="+(gameOver==null?"DRAW":gameOver.type));//game over
+		for(int i=0;i<players.length;i++)System.out.println("player"+i+":\n\tlose="+players[i].getHero().isDying());//game over
 	}
 	
 	public void triggerEvent(Event e)

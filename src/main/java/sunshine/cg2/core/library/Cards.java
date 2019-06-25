@@ -291,5 +291,5 @@ public class Cards {
 		}
 	};
 	
-	public static final CardPackage BASIC_CARDS=new CardPackage(){public CardInfo[] getCardList(){return basicCards.clone();}};
+	public static final CardPackage BASIC_CARDS=new CardPackage(){public CardInfo[] getAllCards(){return basicCards.clone();}};
 }

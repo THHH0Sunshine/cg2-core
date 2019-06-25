@@ -4,22 +4,16 @@ import java.util.HashMap;
 
 public class GamePackage {
 
-	private final HashMap<String,CardInfo> cards=new HashMap<>();
+	private final HashMap<String,CardInfo> allCards=new HashMap<>();
 	
-	public GamePackage(CardPackage[] cardPackages,String[] bannedCards)
+	public GamePackage(CardPackage[] cardPackages)
 	{
-		if(cardPackages!=null)
-		{
-			for(CardPackage p:cardPackages)
-			{
-				for(CardInfo c:p.getCardList())cards.put(c.name,c);
-			}
-		}
-		if(bannedCards!=null)for(String s:bannedCards)cards.remove(s);
+		for(CardPackage p:cardPackages)
+			for(CardInfo c:p.getAllCards())allCards.put(c.name,c);
 	}
 	
 	public CardInfo getCardInfo(String name)
 	{
-		return cards.get(name);
+		return allCards.get(name);
 	}
 }
