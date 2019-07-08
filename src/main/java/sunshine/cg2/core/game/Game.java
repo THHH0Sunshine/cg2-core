@@ -1,7 +1,6 @@
 package sunshine.cg2.core.game;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 import sunshine.cg2.core.game.event.DeathrattleEvent;
 import sunshine.cg2.core.game.event.Event;
@@ -73,11 +72,10 @@ public class Game {
 	private final Rule rule;
 	private final Player[] players;
 	private final EventHandler eventHandler=new EventHandler();
-	private final LinkedList<Card> table=new LinkedList<>();
+	private GameMap map;
 	private int first;
 	private int current;
 	private int round;
-	private int number;
 	
 	void broadcast(Msg msg,JSONObject jsonobj,int except)
 	{
@@ -107,12 +105,6 @@ public class Game {
 		}
 	}
 	
-	int registerOnTable(Card c)
-	{
-		table.add(c);
-		return number++;
-	}
-	
 	void sendto(int to,Msg msg,JSONObject jsonobj)
 	{
 		String name=msg.name();
@@ -120,11 +112,6 @@ public class Game {
 		rt.put("message",name);
 		if(jsonobj!=null)rt.put("data",jsonobj);
 		io.sendTo(to,rt);
-	}
-	
-	void unregisterOnTable(Card c)
-	{
-		table.remove(c);
 	}
 	
 	public Game(GamePackage pack,Rule rule,CardSet[] sets,IO io)
@@ -147,7 +134,7 @@ public class Game {
 		{
 			for(Player p:players)if(p.getHero().isDying())throw new GameOverThrowable(GameOverThrowable.Type.NORMAL);
 			ArrayList<Card> dying=new ArrayList<>();
-			table.forEach(c->{if(c.isDying())dying.add(c);});
+			map.forEachCardOnMap(c->{if(c.isDying())dying.add(c);});
 			if(dying.isEmpty())break;
 			for(Card c:dying)
 			{
@@ -159,7 +146,7 @@ public class Game {
 					//players[c.getMinionOwnerId()].addDeath(c.info.id);
 					break;
 				default:
-					unregisterOnTable(c);
+					map.removeCard(c);
 				}
 			}
 			for(Card c:dying)for(Buff b:c.getAllBuffs())b.triggerSelf(this,new DeathrattleEvent());
@@ -223,6 +210,12 @@ public class Game {
 		return rule;
 	}
 	
+	
+	public GameMap getMap()
+	{
+		return map;
+	}
+	
 	public void registerEvents(Buff buff,Class<? extends Event> select)
 	{
 		eventHandler.register(buff,select);
@@ -264,6 +257,7 @@ public class Game {
 		{
 			round=1;
 			current=first;
+			map = rule.initMap(this);
 			broadcast(Msg.GAMESTART,null,-1);
 			while(round<=rule.maxRounds)
 			{

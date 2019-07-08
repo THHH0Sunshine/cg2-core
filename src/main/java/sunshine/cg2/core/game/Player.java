@@ -35,11 +35,11 @@ public class Player {
 	
 	private void changeHero(Card card)
 	{
-		game.unregisterOnTable(hero);
-		game.registerOnTable(card);
+		game.getMap().removeCard(hero);
+		game.getMap().setCard(0, card);
 		card.replaceOldHero(this,hero);
 		hero=card;
-		if(skill!=null)game.unregisterOnTable(skill);
+		if(skill!=null)game.getMap().removeCard(skill);
 		if(card.info.skill==null)skill=null;
 		else
 		{
@@ -105,7 +105,7 @@ public class Player {
 	
 	private void registerAndInitOnTable(Card c,Card.Position pos)
 	{
-		c.initOnTable(pos,this,game.registerOnTable(c));
+		c.initOnTable(pos,this,game.getMap().setCard(0, c));
 	}
 	
 	private void summon(Card minion,int posi)
@@ -518,7 +518,7 @@ public class Player {
 		for(Buff b:minion.getAllBuffs())game.unregisterEvents(b);
 		int posi=field.indexOf(minion);
 		field.remove(posi);
-		game.unregisterOnTable(minion);
+		game.getMap().removeCard(minion);
 		game.broadcast(Game.Msg.REMOVEMINION,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi}}),-1);
 	}
 	
