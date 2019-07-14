@@ -10,7 +10,7 @@ import sunshine.cg2.core.game.Rule;
 
 public class Rules {
 
-	private static class HsTable extends GameMap.NoMap
+	private static class HsTable extends GameMap
 	{
 		private final LinkedList<Card> cards=new LinkedList<>();
 		private int nextNumber;
