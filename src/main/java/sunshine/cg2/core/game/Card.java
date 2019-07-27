@@ -159,28 +159,6 @@ public class Card {
 		sinj.takeDamage(finj,finj.atk);
 	}
 	
-	public void takeDamage(Card from,int damage)
-	{
-		if(shield)
-		{
-			shield=false;
-			game.broadcast(Game.Msg.LOSESHIELD,new JSONObject(new Object[][]{{"hash",hashCode()}}),-1);
-		}
-		else
-		{
-			if(armor>=damage)armor-=damage;
-			else
-			{
-				HP-=damage-armor;
-				if(HP<=0)dying=true;
-				armor=0;
-			}
-			JSONObject toSend=new JSONObject(new Object[][]{{"tohash",hashCode()},{"num",damage}});
-			if(from!=null)toSend.put("fromhash",from.hashCode());
-			game.broadcast(Game.Msg.DAMAGE,toSend,-1);
-		}
-	}
-	
 	public void gainBuff(BuffInfo buffInfo,String name,Card effectSource)
 	{
 		Buff buff = new Buff(buffInfo,name,this,effectSource);
@@ -267,6 +245,13 @@ public class Card {
 		return false;
 	}
 	
+	public boolean hasRace(CardInfo.Race race)
+	{
+		if (info.races==null)return false;
+		for(CardInfo.Race r:info.races)if(r==race)return true;
+		return false;
+	}
+	
 	public boolean isDying()
 	{
 		return dying;
@@ -336,5 +321,27 @@ public class Card {
 			if (!b.info.isEffect)it.remove();
 		}
 		pp(-datk,-dHP,true);
+	}
+	
+	public void takeDamage(Card from,int damage)
+	{
+		if(shield)
+		{
+			shield=false;
+			game.broadcast(Game.Msg.LOSESHIELD,new JSONObject(new Object[][]{{"hash",hashCode()}}),-1);
+		}
+		else
+		{
+			if(armor>=damage)armor-=damage;
+			else
+			{
+				HP-=damage-armor;
+				if(HP<=0)dying=true;
+				armor=0;
+			}
+			JSONObject toSend=new JSONObject(new Object[][]{{"tohash",hashCode()},{"num",damage}});
+			if(from!=null)toSend.put("fromhash",from.hashCode());
+			game.broadcast(Game.Msg.DAMAGE,toSend,-1);
+		}
 	}
 }

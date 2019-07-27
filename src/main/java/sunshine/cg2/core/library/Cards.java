@@ -10,6 +10,8 @@ import sunshine.cg2.core.game.CardPackage;
 import sunshine.cg2.core.game.Game;
 import sunshine.cg2.core.game.Player;
 import sunshine.cg2.core.game.BuffInfo.KeyWord;
+import sunshine.cg2.core.game.CardInfo.Clz;
+import sunshine.cg2.core.game.CardInfo.Race;
 import sunshine.cg2.core.game.CardInfo.Type;
 import sunshine.cg2.core.game.event.Event;
 import sunshine.cg2.core.game.event.GainBuffEvent;
@@ -103,7 +105,11 @@ public class Cards {
 			}
 		}
 		
-		abstract boolean filter(Buff buff,Game game,Card card);
+		protected boolean filter(Buff buff,Game game,Card card)
+		{
+			return true;
+		}
+				
 	}
 	
 	public static class MyOtherMinionBuffInfo extends MyMinionBuffInfo
@@ -205,9 +211,9 @@ public class Cards {
 	
 	public static class NullTargetCardInfo extends CardInfo
 	{
-		public NullTargetCardInfo(String name,Type type,int cost,int atk,int HP,boolean shield,BuffInfo[] buffs,int choices,CardInfo skill)
+		public NullTargetCardInfo(String name,Clz clz,Race[] races,Type type,int cost,int atk,int HP,boolean shield,BuffInfo[] buffs,int choices,CardInfo skill)
 		{
-			super(name,type,true,cost,atk,HP,shield,buffs,choices,skill);
+			super(name,clz,races,type,true,cost,atk,HP,shield,buffs,choices,skill);
 		}
 		
 		@Override
@@ -221,9 +227,9 @@ public class Cards {
 	{
 		private int damage;
 		
-		public DamageSpellCardInfo(String name,int cost,int choices,int damage)
+		public DamageSpellCardInfo(String name,Clz clz,Race[] races,int cost,int choices,int damage)
 		{
-			super(name,Type.SPELL,true,cost,0,0,false,null,choices,null);
+			super(name,clz,races,Type.SPELL,true,cost,0,0,false,null,choices,null);
 			this.damage=damage;
 		}
 		
@@ -244,9 +250,9 @@ public class Cards {
 	{
 		private final int armor;
 		
-		public DKCardInfo(String name,int cost,int choices,CardInfo skill,int armor)
+		public DKCardInfo(String name,Clz clz,Race[] races,int cost,int choices,CardInfo skill,int armor)
 		{
-			super(name,Type.HERO,true,cost,0,0,false,null,choices,skill);
+			super(name,clz,races,Type.HERO,true,cost,0,0,false,null,choices,skill);
 			this.armor=armor;
 		}
 		
@@ -260,12 +266,12 @@ public class Cards {
 	
 	private static final CardInfo[] basicCards=
 	{
-		new CardInfo("cg2:dummy",Type.NONE,false,0,0,0,false,null,1,null),
-		new NullTargetCardInfo("cg2:minion0",Type.MINION,0,1,1,true,new BuffInfo[]{new MyOtherMinionBuffInfo(null,new PPEffectBuffInfo(null,1,1),"cg2:minion0")},1,null),
-		new CardInfo("cg2:spell0",Type.SPELL,true,0,0,0,false,null,1,null),
-		new CardInfo("cg2:hero0",Type.HERO,false,0,0,30,false,new BuffInfo[]{new BuffInfo(new KeyWord[]{KeyWord.WINDFURY},null,false)},1,null),
-		new DamageSpellCardInfo("hs.basic:yhs",0,1,1),
-		new NullTargetCardInfo("hs.basic:jh",Type.SPELL,0,0,0,false,null,1,null)
+		new CardInfo("cg2:dummy",Clz.NONE,null,Type.NONE,false,0,0,0,false,null,1,null),
+		new NullTargetCardInfo("cg2:minion0",Clz.NONE,new Race[]{Race.BEAST},Type.MINION,0,1,1,true,new BuffInfo[]{new MyOtherMinionBuffInfo(null,new PPEffectBuffInfo(null,1,1),"cg2:minion0")},1,null),
+		new CardInfo("cg2:spell0",Clz.NONE,null,Type.SPELL,true,0,0,0,false,null,1,null),
+		new CardInfo("cg2:hero0",Clz.NONE,null,Type.HERO,false,0,0,30,false,new BuffInfo[]{new BuffInfo(new KeyWord[]{KeyWord.WINDFURY},null,false)},1,null),
+		new DamageSpellCardInfo("hs.basic:yhs",Clz.DRUID,null,0,1,1),
+		new NullTargetCardInfo("hs.basic:jh",Clz.DRUID,null,Type.SPELL,0,0,0,false,null,1,null)
 		{
 			@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 			{
@@ -273,7 +279,7 @@ public class Cards {
 				player.fillCoins(2);
 			}
 		},
-		new NullTargetCardInfo("hs.basic:zj",Type.SPELL,1,0,0,false,null,1,null)
+		new NullTargetCardInfo("hs.basic:zj",Clz.DRUID,null,Type.SPELL,1,0,0,false,null,1,null)
 		{
 			@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 			{
@@ -282,7 +288,7 @@ public class Cards {
 				hero.gainBuff(new ThisTurnPPBuffInfo(null,null,2,0),name,null);
 			}
 		},
-		new CardInfo("hs.basic:yxyj",Type.SPELL,true,2,0,0,false,null,1,null)
+		new CardInfo("hs.basic:yxyj",Clz.DRUID,null,Type.SPELL,true,2,0,0,false,null,1,null)
 		{
 			@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 			{
@@ -294,7 +300,7 @@ public class Cards {
 				return target!=null&&target.getPosition()==Card.Position.MINION;
 			}
 		},
-		new CardInfo("hs.basic:zlzc",Type.SPELL,true,3,0,0,false,null,1,null)
+		new CardInfo("hs.basic:zlzc",Clz.DRUID,null,Type.SPELL,true,3,0,0,false,null,1,null)
 		{
 			@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 			{
@@ -305,21 +311,21 @@ public class Cards {
 				return target!=null;
 			}
 		},
-		new NullTargetCardInfo("hs.basic:yxcz",Type.SPELL,2,0,0,false,null,1,null)
+		new NullTargetCardInfo("hs.basic:yxcz",Clz.DRUID,null,Type.SPELL,2,0,0,false,null,1,null)
 		{
 			@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 			{
 				if(!player.gainEmptyCoins(1,false))player.obtain(player.getGame().createCard("hs.basic:~flgs",-1));
 			}
 		},
-		new NullTargetCardInfo("hs.basic:~flgs",Type.SPELL,0,0,0,false,null,1,null)
+		new NullTargetCardInfo("hs.basic:~flgs",Clz.DRUID,null,Type.SPELL,0,0,0,false,null,1,null)
 		{
 			@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 			{
 				player.draw(1);
 			}
 		},
-		new NullTargetCardInfo("hs.basic:ympx",Type.SPELL,3,0,0,false,null,1,null)
+		new NullTargetCardInfo("hs.basic:ympx",Clz.DRUID,null,Type.SPELL,3,0,0,false,null,1,null)
 		{
 			@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 			{
@@ -329,7 +335,7 @@ public class Cards {
 				for(Card c:player.getField())if(c.positionIsMinionOrHero())c.gainBuff(bi,name,null);
 			}
 		},
-		new DamageSpellCardInfo("hs.basic:hs",4,1,4)
+		new DamageSpellCardInfo("hs.basic:hs",Clz.DRUID,null,4,1,4)
 		{
 			@Override
 			public void doBattlecry(Card card,Player player,Card target,int choi)
@@ -338,7 +344,17 @@ public class Cards {
 				super.doBattlecry(card,player,target,choi);
 				player.getGame().forEachCardOnTable(c->{if(c!=target&&c.getOwner()==tarp&&c.positionIsMinionOrHero())c.takeDamage(card,1);});
 			}
-		}
+		},
+		new DamageSpellCardInfo("hs.basic:xhs",Clz.DRUID,null,6,1,5)
+		{
+			@Override
+			public void doBattlecry(Card card,Player player,Card target,int choi)
+			{
+				super.doBattlecry(card,player,target,choi);
+				player.draw(1);
+			}
+		},
+		new NullTargetCardInfo("hs.basic:albkbhz",Clz.DRUID,null,Type.MINION,8,8,8,false,new BuffInfo[]{new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)},1,null),
 	};
 	
 	public static final CardPackage BASIC_CARDS=new CardPackage(){public CardInfo[] getAllCards(){return basicCards.clone();}};

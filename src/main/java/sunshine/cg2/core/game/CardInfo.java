@@ -14,7 +14,31 @@ public class CardInfo {
 		SPECIAL,
 	}
 	
+	public enum Clz
+	{
+		NONE,
+		DEATHKNIGHT,
+		DRUID,
+		HUNTER,
+		MAGE,
+		PALADIN,
+		PRIEST,
+		ROGUE,
+		SHAMAN,
+		WARLOCK,
+		WARRIOR,
+	}
+	
+	public enum Race
+	{
+		BEAST,
+		DRAGON,
+		MURLOC,
+	}
+	
 	public final String name;
+	public final Clz clz;
+	public final Race[] races;
 	public final Type type;
 	public final boolean canPlay;
 	public final int cost;
@@ -25,9 +49,11 @@ public class CardInfo {
 	public final int choices;
 	public final CardInfo skill;
 	
-	public CardInfo(String name,Type type,boolean canPlay,int cost,int atk,int HP,boolean shield,BuffInfo[] buffs,int choices,CardInfo skill)
+	public CardInfo(String name,Clz clz,Race[] races,Type type,boolean canPlay,int cost,int atk,int HP,boolean shield,BuffInfo[] buffs,int choices,CardInfo skill)
 	{
 		this.name=name;
+		this.clz=clz;
+		this.races=races;
 		this.type=type;
 		this.canPlay=canPlay;
 		this.cost=cost;
