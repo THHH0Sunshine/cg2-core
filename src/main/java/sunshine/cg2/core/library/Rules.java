@@ -1,46 +1,11 @@
 package sunshine.cg2.core.library;
 
-import java.util.LinkedList;
-import java.util.function.Consumer;
-
-import sunshine.cg2.core.game.Card;
-import sunshine.cg2.core.game.Game;
-import sunshine.cg2.core.game.GameMap;
 import sunshine.cg2.core.game.Rule;
 
 public class Rules {
 
-	private static class HsTable extends GameMap
-	{
-		private final LinkedList<Card> cards=new LinkedList<>();
-		private int nextNumber;
-		
-		@Override
-		public int setCard(int pos, Card card)
-		{
-			cards.add(card);
-			return nextNumber++;
-		}
-		
-		@Override
-		public void removeCard(Card card)
-		{
-			cards.remove(card);
-		}
-		
-		@Override
-		public void forEachCardOnMap(Consumer<? super Card> action)
-		{
-			cards.forEach(action);
-		}
-	}
-	
 	public static final Rule TEST=new Rule("cg2:test",10,10,999,10,7)
 	{
-		public GameMap initMap(Game game)
-		{
-			return new HsTable();
-		}
 		public boolean canChangeFirst(int pos,int num)
 		{
 			return false;
@@ -77,10 +42,6 @@ public class Rules {
 	
 	public static final Rule HEARTHSTONE=new Rule("cg2:hearthstone",60,10,60,10,7)
 	{
-		public GameMap initMap(Game game)
-		{
-			return new HsTable();
-		}
 		public boolean canChangeFirst(int pos,int num)
 		{
 			return true;

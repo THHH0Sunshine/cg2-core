@@ -1,6 +1,7 @@
 package sunshine.cg2.core.game;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import sunshine.cg2.core.game.event.DeathrattleEvent;
 import sunshine.cg2.core.game.event.Event;
@@ -18,13 +19,14 @@ public class Game {
 		ENDTURN,
 		PLAYHAND,//index,posi,choice,toposiwho,toposi
 		USESKILL,//choice,toposiwho,toposi
+		SPECIAL,//...
 	}
 	
 	enum Msg
 	{
 		//BuffObject:{name:string,keywords:[string]}
-		//CardDisplayObject:{name:string,cost:int,atk:int,hp:int,canplay:boolean,type:string}
-		//CardFullObject:{hash:int,name:string,atk:int,maxhp:int,hp:int,shield:boolean,armor:int,buff:[BuffObject]}
+		//CardDisplayObject:{name:string,cost:int,atk:int,hp:int,canplay:boolean,type:string,handtags:{...}}
+		//CardFullObject:{hash:int,name:string,atk:int,maxhp:int,hp:int,shield:boolean,armor:int,buff:[BuffObject],tabletags:{...}}
 		NULL,
 		ASKFORFIRST,
 		ATTACK,//{fromhash:int,tohash:int}
@@ -72,7 +74,8 @@ public class Game {
 	private final Rule rule;
 	private final Player[] players;
 	private final EventHandler eventHandler=new EventHandler();
-	private GameMap map;
+	private final LinkedList<Card> cards=new LinkedList<>();
+	private int nextNumber;
 	private int first;
 	private int current;
 	private int round;
@@ -100,6 +103,7 @@ public class Game {
 		while(true)
 		{
 			IO.Reply r=io.recv();
+			if(r.data.length<=0)players[r.who].leave(false);
 			if(getRMsg(r.data[0])==RMsg.CONCEDE)players[r.who].leave(true);
 			if(r.who==from)return r.data;
 		}
@@ -127,6 +131,12 @@ public class Game {
 		}
 	}
 	
+	public int addCardToTable(Card card)
+	{
+		cards.add(card);
+		return nextNumber++;
+	}
+	
 	public int checkForDeath(boolean completely) throws GameOverThrowable
 	{
 		int rt=0;
@@ -134,7 +144,7 @@ public class Game {
 		{
 			for(Player p:players)if(p.getHero().isDying())throw new GameOverThrowable(GameOverThrowable.Type.NORMAL);
 			ArrayList<Card> dying=new ArrayList<>();
-			map.forEachCardOnMap(c->{if(c.isDying())dying.add(c);});
+			cards.forEach(c->{if(c.isDying())dying.add(c);});
 			if(dying.isEmpty())break;
 			for(Card c:dying)
 			{
@@ -146,7 +156,7 @@ public class Game {
 					//players[c.getMinionOwnerId()].addDeath(c.info.id);
 					break;
 				default:
-					map.removeCard(c);
+					cards.remove(c);
 				}
 			}
 			for(Card c:dying)for(Buff b:c.getAllBuffs())b.triggerSelf(this,new DeathrattleEvent());
@@ -168,11 +178,6 @@ public class Game {
 	public Card createClear(Card card)
 	{
 		return createCard(card.info,card.from);
-	}
-	
-	public Card createDummy()
-	{
-		return createCard("cg2:dummy",-1);
 	}
 	
 	public Player getCurrentPlayer()
@@ -210,15 +215,14 @@ public class Game {
 		return rule;
 	}
 	
-	
-	public GameMap getMap()
-	{
-		return map;
-	}
-	
 	public void registerEvents(Buff buff,Class<? extends Event> select)
 	{
 		eventHandler.register(buff,select);
+	}
+	
+	public void removeCardFromTable(Card card)
+	{
+		cards.remove(card);
 	}
 	
 	public void run()
@@ -257,7 +261,6 @@ public class Game {
 		{
 			round=1;
 			current=first;
-			map = rule.initMap(this);
 			broadcast(Msg.GAMESTART,null,-1);
 			while(round<=rule.maxRounds)
 			{

@@ -1,6 +1,7 @@
 package sunshine.cg2.core.game;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 
 import sunshine.cg2.core.game.event.NormalLosingEvent;
@@ -35,11 +36,11 @@ public class Player {
 	
 	private void changeHero(Card card)
 	{
-		game.getMap().removeCard(hero);
-		game.getMap().setCard(0, card);
+		game.removeCardFromTable(hero);
+		game.addCardToTable(card);
 		card.replaceOldHero(this,hero);
 		hero=card;
-		if(skill!=null)game.getMap().removeCard(skill);
+		if(skill!=null)game.removeCardFromTable(skill);
 		if(card.info.skill==null)skill=null;
 		else
 		{
@@ -74,11 +75,11 @@ public class Player {
 	private void pdmg()
 	{
 		game.broadcast(Game.Msg.P,new JSONObject(new Object[][]{{"who",index},{"num",p}}),-1);
-		p++;
 		hero.takeDamage(null,p);
+		p++;
 	}
 	
-	private void playHand(int index,int posi,int choi,Card target) throws GameOverThrowable
+	private void playHand(int index,int posi,int choi,Card target,byte[] extra) throws GameOverThrowable
 	{
 		Card card=hand.get(index);
 		spendCoins(card.getCost());
@@ -86,7 +87,7 @@ public class Player {
 		switch(card.info.type)
 		{
 		case MINION:
-			summon(card,posi);
+			summon(card,posi,extra);
 			break;
 		case SPELL:
 			break;
@@ -105,10 +106,10 @@ public class Player {
 	
 	private void registerAndInitOnTable(Card c,Card.Position pos)
 	{
-		c.initOnTable(pos,this,game.getMap().setCard(0, c));
+		c.initOnTable(pos,this,game.addCardToTable(c));
 	}
 	
-	private void summon(Card minion,int posi)
+	private void summon(Card minion,int posi,byte[] extra)
 	{
 		int n=getFieldNum();
 		if(n>=game.getRule().maxField)return;
@@ -189,15 +190,19 @@ public class Player {
 					}
 					if(!tt.isEmpty())
 					{
-						for(int cci:tt)if(p.field.get(cci).hasKW(BuffInfo.KeyWord.IMMUNE)/*||!c.info.canAttack(c,cc)*/)tt.remove(cci);
+						for(int cci:tt)
+						{
+							Card cc = p.field.get(cci);
+							if(cc.hasKW(BuffInfo.KeyWord.IMMUNE)||!c.info.canAttack(c,cc))tt.remove(cci);
+						}
 					}
 					else
 					{
-						if(speed==2&&!p.hero.hasKW(BuffInfo.KeyWord.IMMUNE)&&!p.hero.hasKW(BuffInfo.KeyWord.STEALTH)/*&&c.info.canAttack(c,p.hero)*/)tt.add(-1);
+						if(speed==2&&!p.hero.hasKW(BuffInfo.KeyWord.IMMUNE)&&!p.hero.hasKW(BuffInfo.KeyWord.STEALTH)&&c.info.canAttack(c,p.hero))tt.add(-1);
 						for(int i=0;i<pmcount;i++)
 						{
 							Card ccc=p.field.get(i);
-							if(c.positionIsMinionOrHero()&&!ccc.hasKW(BuffInfo.KeyWord.IMMUNE)&&!ccc.hasKW(BuffInfo.KeyWord.STEALTH)/*&&c.info.canAttack(c,ccc)*/)tt.add(i);
+							if(c.positionIsMinionOrHero()&&!ccc.hasKW(BuffInfo.KeyWord.IMMUNE)&&!ccc.hasKW(BuffInfo.KeyWord.STEALTH)&&c.info.canAttack(c,ccc))tt.add(i);
 						}
 					}
 					for(int cci:tt)targets.add(new JSONObject(new Object[][]{{"pIndex",p.index},{"mIndex",cci}}));
@@ -239,7 +244,7 @@ public class Player {
 			switch(game.getRMsg(reply[0]))
 			{
 			case ATTACK:
-				if(index==reply[2])leave(false);
+				if(reply.length<4||index==reply[2])leave(false);
 				if(reply[1]>=minionNum)leave(false);
 				Card from=reply[1]<0?hero:field.get(reply[1]);
 				if(!from.positionIsMinionOrHero()||reply[2]<0||reply[2]>=game.getPlayerCount())leave(false);
@@ -266,13 +271,14 @@ public class Player {
 					}
 				}
 				if(f)leave(false);
-				from.attack(target);
+				from.attack(target,Arrays.copyOfRange(reply, 4, reply.length));
 				game.checkForDeath(true);
 				break;
 			case ENDTURN:
 				playing=false;
 				break;
 			case PLAYHAND:
+				if(reply.length<6)leave(false);
 				if(reply[4]<0||reply[4]>=game.getPlayerCount())target=null;
 				else
 				{
@@ -303,7 +309,7 @@ public class Player {
 					}
 				}
 				if(f)leave(false);
-				playHand(reply[1],reply[2],reply[3],target);
+				playHand(reply[1],reply[2],reply[3],target,Arrays.copyOfRange(reply,6,reply.length));
 				break;
 			/*case USESKILL:
 				if(skill==null)leave(false);
@@ -518,7 +524,7 @@ public class Player {
 		for(Buff b:minion.getAllBuffs())game.unregisterEvents(b);
 		int posi=field.indexOf(minion);
 		field.remove(posi);
-		game.getMap().removeCard(minion);
+		game.removeCardFromTable(minion);
 		game.broadcast(Game.Msg.REMOVEMINION,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi}}),-1);
 	}
 	

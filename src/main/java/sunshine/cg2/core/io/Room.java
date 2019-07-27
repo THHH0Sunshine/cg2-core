@@ -86,6 +86,7 @@ public class Room implements IO {
 			}
 			catch(InterruptedException e)
 			{
+				Thread.currentThread().interrupt();
 				continue;
 			}
 			if(m.who<0||m.who>=clients.size()||m.data.length<=0)continue;

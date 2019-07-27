@@ -1,5 +1,7 @@
 package sunshine.cg2.core.game;
 
+import sunshine.cg2.core.util.JSONObject;
+
 public class CardInfo {
 
 	public enum Type
@@ -9,6 +11,7 @@ public class CardInfo {
 		SPELL,
 		WEAPON,
 		HERO,
+		SPECIAL,
 	}
 	
 	public final String name;
@@ -41,6 +44,11 @@ public class CardInfo {
 		return false;
 	}
 	
+	public boolean canAttack(Card card,Card target)
+	{
+		return true;
+	}
+	
 	public boolean changeHero(Player player,Card oldHero,Card newHero)
 	{
 		return false;
@@ -48,5 +56,15 @@ public class CardInfo {
 	
 	public void doBattlecry(Card card,Player player,Card target,int choi)
 	{
+	}
+	
+	public JSONObject getHandTags(Card card)
+	{
+		return null;
+	}
+	
+	public JSONObject getTableTags(Card card)
+	{
+		return null;
 	}
 }

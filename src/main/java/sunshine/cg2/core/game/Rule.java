@@ -19,7 +19,6 @@ public abstract class Rule {
 		this.maxField=maxField;
 	}
 	
-	public abstract GameMap initMap(Game game);
 	public abstract boolean canChangeFirst(int pos,int num);
 	public abstract int chooseFirst(int num);
 	public abstract int getCoins(int pos);

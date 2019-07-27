@@ -1,6 +1,8 @@
 package sunshine.cg2.core.game;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import sunshine.cg2.core.game.event.GainBuffEvent;
@@ -22,7 +24,7 @@ public class Card {
 		EQUIP,
 		SECRET,
 		QUEST,
-		ENVIRONMENT
+		SPECIAL,
 	}
 	
 	private Game game;
@@ -42,6 +44,7 @@ public class Card {
 	private Position position=Position.NONE;
 	public final CardInfo info;
 	public final int from;
+	public final HashMap<String,Object> tags = new HashMap<>();
 	
 	Card(Game game,CardInfo info,int from,int cost,int atk,int HP)
 	{
@@ -63,7 +66,17 @@ public class Card {
 	
 	JSONObject getDisplayObject()
 	{
-		return new JSONObject(new Object[][]{{"name",info.name},{"cost",cost},{"atk",getAtk()},{"hp",HP},{"canplay",info.canPlay},{"type",info.type.name()},{"choices",info.choices}});
+		return new JSONObject(new Object[][]
+		{
+			{"name",info.name},
+			{"cost",cost},
+			{"atk",getAtk()},
+			{"hp",HP},
+			{"canplay",info.canPlay},
+			{"type",info.type.name()},
+			{"choices",info.choices},
+			{"handtags",info.getHandTags(this)}
+		});
 	}
 	
 	JSONObject getFullObject()
@@ -79,7 +92,8 @@ public class Card {
 			{"hp",HP},
 			{"shield",shield},
 			{"armor",armor},
-			{"buff",rtBuff}
+			{"buff",rtBuff},
+			{"tabletags",info.getHandTags(this)}
 		});
 	}
 	
@@ -120,7 +134,7 @@ public class Card {
 		}
 	}
 	
-	public void attack(Card target)
+	public void attack(Card target,byte[] extra)
 	{
 		for(Buff b:buffs)
 		{
@@ -194,17 +208,6 @@ public class Card {
 	{
 		for(Buff b:buffs)if(b.effectSource==source)return b;
 		return null;
-	}
-	
-	public void restoreHealth(Card from,int count)
-	{
-		if(HP>=maxHP)return;
-		int c=maxHP-HP;
-		if(count<c)c=count;
-		HP+=count;
-		JSONObject toSend=new JSONObject(new Object[][]{{"tohash",hashCode()},{"num",c}});
-		if(from!=null)toSend.put("fromhash",from.hashCode());
-		game.broadcast(Game.Msg.HEAL,toSend,-1);
 	}
 	
 	public int getMaxWind()
@@ -310,5 +313,27 @@ public class Card {
 			if(this.HP<=0)dying=true;
 		}
 		game.broadcast(Game.Msg.CHANGEPP,new JSONObject(new Object[][]{{"hash",hashCode()},{"atk",getAtk()},{"maxhp",maxHP},{"hp",this.HP}}),-1);
+	}
+	
+	public void restoreHealth(Card from,int count)
+	{
+		if(HP>=maxHP)return;
+		int c=maxHP-HP;
+		if(count<c)c=count;
+		HP+=count;
+		JSONObject toSend=new JSONObject(new Object[][]{{"tohash",hashCode()},{"num",c}});
+		if(from!=null)toSend.put("fromhash",from.hashCode());
+		game.broadcast(Game.Msg.HEAL,toSend,-1);
+	}
+	
+	public void silence()
+	{
+		Iterator<Buff> it = buffs.iterator();
+		while (it.hasNext())
+		{
+			Buff b = it.next();
+			if (!b.info.isEffect)it.remove();
+		}
+		pp(-datk,-dHP,true);
 	}
 }
