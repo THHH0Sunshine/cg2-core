@@ -181,10 +181,11 @@ public class Card {
 		}
 	}
 	
-	public void gainBuff(Buff buff)
+	public void gainBuff(BuffInfo buffInfo,String name,Card effectSource)
 	{
+		Buff buff = new Buff(buffInfo,name,this,effectSource);
 		buffs.add(buff);
-		if(buff.info.events!=null)game.registerEvents(buff,GlobalEvent.class);
+		if(buffInfo.events!=null)game.registerEvents(buff,GlobalEvent.class);
 		game.broadcast(Game.Msg.GAINBUFF,new JSONObject(new Object[][]{{"hash",hashCode()},{"buff",buff.getObject()}}),-1);
 		buff.triggerSelf(game,new GainBuffEvent());
 	}

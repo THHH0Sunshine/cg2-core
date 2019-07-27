@@ -2,6 +2,7 @@ package sunshine.cg2.core.game;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.function.Consumer;
 
 import sunshine.cg2.core.game.event.DeathrattleEvent;
 import sunshine.cg2.core.game.event.Event;
@@ -74,7 +75,7 @@ public class Game {
 	private final Rule rule;
 	private final Player[] players;
 	private final EventHandler eventHandler=new EventHandler();
-	private final LinkedList<Card> cards=new LinkedList<>();
+	private final LinkedList<Card> table=new LinkedList<>();
 	private int nextNumber;
 	private int first;
 	private int current;
@@ -133,7 +134,7 @@ public class Game {
 	
 	public int addCardToTable(Card card)
 	{
-		cards.add(card);
+		table.add(card);
 		return nextNumber++;
 	}
 	
@@ -144,7 +145,7 @@ public class Game {
 		{
 			for(Player p:players)if(p.getHero().isDying())throw new GameOverThrowable(GameOverThrowable.Type.NORMAL);
 			ArrayList<Card> dying=new ArrayList<>();
-			cards.forEach(c->{if(c.isDying())dying.add(c);});
+			table.forEach(c->{if(c.isDying())dying.add(c);});
 			if(dying.isEmpty())break;
 			for(Card c:dying)
 			{
@@ -156,7 +157,7 @@ public class Game {
 					//players[c.getMinionOwnerId()].addDeath(c.info.id);
 					break;
 				default:
-					cards.remove(c);
+					table.remove(c);
 				}
 			}
 			for(Card c:dying)for(Buff b:c.getAllBuffs())b.triggerSelf(this,new DeathrattleEvent());
@@ -178,6 +179,11 @@ public class Game {
 	public Card createClear(Card card)
 	{
 		return createCard(card.info,card.from);
+	}
+	
+	public void forEachCardOnTable(Consumer<? super Card> action)
+	{
+		table.forEach(action);
 	}
 	
 	public Player getCurrentPlayer()
@@ -222,7 +228,7 @@ public class Game {
 	
 	public void removeCardFromTable(Card card)
 	{
-		cards.remove(card);
+		table.remove(card);
 	}
 	
 	public void run()

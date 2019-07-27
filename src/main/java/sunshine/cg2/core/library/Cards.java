@@ -44,7 +44,7 @@ public class Cards {
 					{
 						if(c.positionIsMinionOrHero()&&filter(buff,game,c))
 						{
-							c.gainBuff(new Buff(effectInfo,effectName,c,who));
+							c.gainBuff(effectInfo,effectName,who);
 						}
 					}
 				}
@@ -52,7 +52,7 @@ public class Cards {
 				{
 					if(who.getOwner()==buff.toBuff.getOwner()&&filter(buff,game,who))
 					{
-						who.gainBuff(new Buff(effectInfo,effectName,who,buff.toBuff));
+						who.gainBuff(effectInfo,effectName,buff.toBuff);
 					}
 				}
 			}
@@ -86,7 +86,7 @@ public class Cards {
 				{
 					if(c.positionIsMinionOrHero()&&filter(buff,game,c))
 					{
-						c.gainBuff(new Buff(effectInfo,effectName,c,buff.toBuff));
+						c.gainBuff(effectInfo,effectName,buff.toBuff);
 					}
 				}
 			}
@@ -122,8 +122,8 @@ public class Cards {
 	
 	public static class PPEffectBuffInfo extends BuffInfo
 	{
-		private int atk;
-		private int HP;
+		private final int atk;
+		private final int HP;
 		
 		public PPEffectBuffInfo(KeyWord[] keyWords,int atk,int HP)
 		{
@@ -144,6 +144,7 @@ public class Cards {
 	{
 		private static Object[] events(Object[] c)
 		{
+			if(c==null)return new Object[]{AfterTurnEndEvent.class};
 			Object[] rt=Arrays.copyOf(c,c.length+1);
 			rt[c.length]=AfterTurnEndEvent.class;
 			return rt;
@@ -158,6 +159,42 @@ public class Cards {
 		public void onTrigger(Buff buff,Game game,Event event)
 		{
 			if(event instanceof AfterTurnEndEvent)buff.toBuff.loseBuff(buff);
+			else onExtraEvents(buff,game,event);
+		}
+		
+		public void onExtraEvents(Buff buff,Game game,Event event)
+		{
+		}
+	}
+	
+	public static class ThisTurnPPBuffInfo extends BuffInfo
+	{
+		private static Object[] events(Object[] c)
+		{
+			if(c==null)return new Object[]{AfterTurnEndEvent.class,GainBuffEvent.class,LoseBuffEvent.class};
+			Object[] rt=Arrays.copyOf(c,c.length+3);
+			rt[c.length]=AfterTurnEndEvent.class;
+			rt[c.length+1]=GainBuffEvent.class;
+			rt[c.length+2]=LoseBuffEvent.class;
+			return rt;
+		}
+		
+		private final int atk;
+		private final int HP;
+		
+		public ThisTurnPPBuffInfo(KeyWord[] keyWords,Object[] extraEvents,int atk,int HP)
+		{
+			super(keyWords,events(extraEvents),false);
+			this.atk = atk;
+			this.HP = HP;
+		}
+		
+		@Override
+		public void onTrigger(Buff buff,Game game,Event event)
+		{
+			if(event instanceof AfterTurnEndEvent)buff.toBuff.loseBuff(buff);
+			else if(event instanceof GainBuffEvent)buff.toBuff.pp(atk,HP,false);
+			else if(event instanceof LoseBuffEvent)buff.toBuff.pp(-atk,-HP,false);
 			else onExtraEvents(buff,game,event);
 		}
 		
@@ -242,21 +279,14 @@ public class Cards {
 			{
 				Card hero=player.getHero();
 				player.gainArmor(3);
-				hero.gainBuff(new Buff(new ThisTurnBuffInfo(null,new Object[]{GainBuffEvent.class,LoseBuffEvent.class})
-				{
-					@Override public void onExtraEvents(Buff buff,Game game,Event event)
-					{
-						if(event instanceof GainBuffEvent)buff.toBuff.pp(2,0,false);
-						else buff.toBuff.pp(-2,0,false);
-					}
-				},name,hero,null));
+				hero.gainBuff(new ThisTurnPPBuffInfo(null,null,2,0),name,null);
 			}
 		},
 		new CardInfo("hs.basic:yxyj",Type.SPELL,true,2,0,0,false,null,1,null)
 		{
 			@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 			{
-				target.gainBuff(new Buff(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false),name,target,null));
+				target.gainBuff(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false),name,null);
 				target.pp(2,2,true);
 			}
 			@Override public boolean canTarget(Card card,Player player,Card target,int choi)
@@ -287,6 +317,26 @@ public class Cards {
 			@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 			{
 				player.draw(1);
+			}
+		},
+		new NullTargetCardInfo("hs.basic:ympx",Type.SPELL,3,0,0,false,null,1,null)
+		{
+			@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+			{
+				Card hero=player.getHero();
+				BuffInfo bi = new ThisTurnPPBuffInfo(null,null,2,0);
+				hero.gainBuff(bi,name,null);
+				for(Card c:player.getField())if(c.positionIsMinionOrHero())c.gainBuff(bi,name,null);
+			}
+		},
+		new DamageSpellCardInfo("hs.basic:hs",4,1,4)
+		{
+			@Override
+			public void doBattlecry(Card card,Player player,Card target,int choi)
+			{
+				Player tarp=target.getOwner();
+				super.doBattlecry(card,player,target,choi);
+				player.getGame().forEachCardOnTable(c->{if(c!=target&&c.getOwner()==tarp&&c.positionIsMinionOrHero())c.takeDamage(card,1);});
 			}
 		}
 	};

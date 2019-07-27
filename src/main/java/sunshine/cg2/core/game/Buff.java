@@ -11,6 +11,14 @@ public class Buff {
 	public final String name;
 	public final BuffInfo info;
 	
+	Buff(BuffInfo info,String name,Card toBuff,Card effectSource)
+	{
+		this.info=info;
+		this.name=name;
+		this.toBuff=toBuff;
+		this.effectSource=effectSource;
+	}
+	
 	JSONObject getObject()
 	{
 		JSONArray kws;
@@ -23,15 +31,7 @@ public class Buff {
 		return new JSONObject(new Object[][]{{"name",name},{"keywords",kws}});
 	}
 	
-	public Buff(BuffInfo info,String name,Card toBuff,Card effectSource)
-	{
-		this.info=info;
-		this.name=name;
-		this.toBuff=toBuff;
-		this.effectSource=effectSource;
-	}
-	
-	public void triggerSelf(Game game,Event event)
+	void triggerSelf(Game game,Event event)
 	{
 		if(info.events==null)return;
 		for(Object o:info.events)
