@@ -20,9 +20,9 @@ class EventHandler {
 			return list.remove(b);
 		}
 		
-		void triggerAll(Game g,Event e)
+		void triggerAll(Event e)
 		{
-			for(Buff b:list)b.info.onTrigger(b,g,e);
+			for(Buff b:list)b.info.onTrigger(b,e);
 		}
 	}
 	
@@ -51,8 +51,8 @@ class EventHandler {
 		registry.forEach((k,v)->{v.remove(buff);});
 	}
 	
-	void triggerEvent(Game game,Event e)
+	void triggerEvent(Event e)
 	{
-		registry.forEach((c,l)->{if(c.isAssignableFrom(e.getClass()))l.triggerAll(game,e);});
+		registry.forEach((c,l)->{if(c.isAssignableFrom(e.getClass()))l.triggerAll(e);});
 	}
 }

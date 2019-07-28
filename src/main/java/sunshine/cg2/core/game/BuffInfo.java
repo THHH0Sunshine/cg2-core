@@ -28,7 +28,7 @@ public class BuffInfo {
 		this.isEffect=isEffect;
 	}
 	
-	public void onTrigger(Buff buff,Game game,Event event)
+	public void onTrigger(Buff buff,Event event)
 	{
 	}
 }

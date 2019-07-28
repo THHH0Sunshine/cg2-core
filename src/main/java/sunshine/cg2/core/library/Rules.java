@@ -6,35 +6,35 @@ public class Rules {
 
 	public static final Rule TEST=new Rule("cg2:test",10,10,999,10,7)
 	{
-		public boolean canChangeFirst(int pos,int num)
+		@Override public boolean canChangeFirst(int pos,int num)
 		{
 			return false;
 		}
-		public int chooseFirst(int num)
+		@Override public int chooseFirst(int num)
 		{
 			return 0;
 		}
-		public int getCoins(int pos)
+		@Override public int getCoins(int pos)
 		{
 			return 10;
 		}
-		public String[] getDeck(String[] cardSet,int pos)
+		@Override public String[] getDeck(String[] cardSet,int pos)
 		{
 			return cardSet.clone();
 		}
-		public int getCoinNum(int pos,int round)
+		@Override public int getCoinNum(int pos,int round)
 		{
 			return 1;
 		}
-		public int getDrawNum(int pos,int round)
+		@Override public int getDrawNum(int pos,int round)
 		{
 			return 1;
 		}
-		public String[] getExtraFirst(int pos,int num)
+		@Override public String[] getExtraFirst(int pos,int num)
 		{
 			return new String[]{"cg2:spell0"};
 		}
-		public int getFirstCards(int pos,int num)
+		@Override public int getFirstCards(int pos,int num)
 		{
 			return 5;
 		}
@@ -42,19 +42,19 @@ public class Rules {
 	
 	public static final Rule HEARTHSTONE=new Rule("cg2:hearthstone",60,10,60,10,7)
 	{
-		public boolean canChangeFirst(int pos,int num)
+		@Override public boolean canChangeFirst(int pos,int num)
 		{
 			return true;
 		}
-		public int chooseFirst(int num)
+		@Override public int chooseFirst(int num)
 		{
 			return (int)Math.random()*num;
 		}
-		public int getCoins(int pos)
+		@Override public int getCoins(int pos)
 		{
 			return 0;
 		}
-		public String[] getDeck(String[] cardSet,int pos)
+		@Override public String[] getDeck(String[] cardSet,int pos)
 		{
 			int l=cardSet.length;
 			String[] rt=new String[l];
@@ -67,20 +67,20 @@ public class Rules {
 			}
 			return rt;
 		}
-		public int getCoinNum(int pos,int round)
+		@Override public int getCoinNum(int pos,int round)
 		{
 			return 1;
 		}
-		public int getDrawNum(int pos,int round)
+		@Override public int getDrawNum(int pos,int round)
 		{
 			return 1;
 		}
-		public String[] getExtraFirst(int pos,int num)
+		@Override public String[] getExtraFirst(int pos,int num)
 		{
 			if(pos==num-1)return new String[]{"cg2:spell0"};
 			return null;
 		}
-		public int getFirstCards(int pos,int num)
+		@Override public int getFirstCards(int pos,int num)
 		{
 			return pos==0?3:4;
 		}

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import sunshine.cg2.core.game.Buff;
 import sunshine.cg2.core.game.BuffInfo;
 import sunshine.cg2.core.game.Card;
+import sunshine.cg2.core.game.Card.Position;
 import sunshine.cg2.core.game.CardInfo;
 import sunshine.cg2.core.game.CardPackage;
 import sunshine.cg2.core.game.Game;
@@ -17,102 +18,94 @@ import sunshine.cg2.core.game.event.Event;
 import sunshine.cg2.core.game.event.GainBuffEvent;
 import sunshine.cg2.core.game.event.LoseBuffEvent;
 import sunshine.cg2.core.game.event.globalevent.AfterTurnEndEvent;
-import sunshine.cg2.core.game.event.globalevent.MinionEnterEvent;
-import sunshine.cg2.core.game.event.globalevent.MinionLeaveEvent;
+import sunshine.cg2.core.game.event.globalevent.EnterTableEvent;
+import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
 
 public class Cards {
 
-	public static abstract class MyMinionBuffInfo extends BuffInfo
+	public static abstract class TableBuffInfo extends BuffInfo
 	{
 		private final BuffInfo effectInfo;
 		private final String effectName;
 		
-		public MyMinionBuffInfo(KeyWord[] keyWords,BuffInfo effectInfo,String effectName)
+		public TableBuffInfo(KeyWord[] keyWords,BuffInfo effectInfo,String effectName)
 		{
-			super(keyWords,new Object[]{MinionEnterEvent.class,GainBuffEvent.class,MinionLeaveEvent.class,LoseBuffEvent.class},false);
+			super(keyWords,new Object[]{EnterTableEvent.class,GainBuffEvent.class,LeaveTableEvent.class,LoseBuffEvent.class},false);
 			this.effectInfo=effectInfo;
 			this.effectName=effectName;
 		}
 		
 		@Override
-		public void onTrigger(Buff buff,Game game,Event event)
+		public void onTrigger(Buff buff,Event event)
 		{
-			if(event instanceof MinionEnterEvent)
+			Game game=buff.toBuff.getGame();
+			if(event instanceof EnterTableEvent)
 			{
-				Card who=((MinionEnterEvent)event).minion;
+				Card who=((EnterTableEvent)event).card;
 				if(who==buff.toBuff)
 				{
-					for(Card c:who.getOwner().getField())
+					game.forEachCardOnTable(c->
 					{
-						if(c.positionIsMinionOrHero()&&filter(buff,game,c))
+						if(filter(buff,game,c))
 						{
-							c.gainBuff(effectInfo,effectName,who);
+							c.gainBuff(effectInfo,effectName,buff);
 						}
-					}
+					});
 				}
 				else
 				{
-					if(who.getOwner()==buff.toBuff.getOwner()&&filter(buff,game,who))
+					if(filter(buff,game,who))
 					{
-						who.gainBuff(effectInfo,effectName,buff.toBuff);
+						who.gainBuff(effectInfo,effectName,buff);
 					}
 				}
 			}
-			else if(event instanceof MinionLeaveEvent)
+			else if(event instanceof LeaveTableEvent)
 			{
-				Card who=((MinionLeaveEvent)event).minion;
+				Card who=((LeaveTableEvent)event).card;
 				if(who==buff.toBuff)
 				{
-					for(Player p:game.getAllPlayers())
+					game.forEachCardOnTable(c->
 					{
-						for(Card c:p.getField())
-						{
-							Buff b=c.getEffectBySource(who);
-							if(b!=null)c.loseBuff(b);
-						}
-					}
+						Buff b=c.getEffectBySource(buff);
+						if(b!=null)c.loseBuff(b);
+					});
 				}
 				else
 				{
-					MinionLeaveEvent.Reason reason=((MinionLeaveEvent)event).reason;
-					if(reason!=null&&(reason.equals(MinionLeaveEvent.Reason.CONTROL)))
+					LeaveTableEvent.Reason reason=((LeaveTableEvent)event).reason;
+					if(reason==LeaveTableEvent.Reason.CONTROL||reason==LeaveTableEvent.Reason.CHANGEHERO)
 					{
-						Buff b=who.getEffectBySource(buff.toBuff);
+						Buff b=who.getEffectBySource(buff);
 						if(b!=null)who.loseBuff(b);
 					}
 				}
 			}
 			else if(event instanceof GainBuffEvent)
 			{
-				for(Card c:buff.toBuff.getOwner().getField())
+				game.forEachCardOnTable(c->
 				{
-					if(c.positionIsMinionOrHero()&&filter(buff,game,c))
+					if(filter(buff,game,c))
 					{
-						c.gainBuff(effectInfo,effectName,buff.toBuff);
+						c.gainBuff(effectInfo,effectName,buff);
 					}
-				}
+				});
 			}
 			else if(event instanceof LoseBuffEvent)
 			{
-				for(Player p:game.getAllPlayers())
+				game.forEachCardOnTable(c->
 				{
-					for(Card c:p.getField())
-					{
-						Buff b=c.getEffectBySource(buff.toBuff);
-						if(b!=null)c.loseBuff(b);
-					}
-				}
+					Buff b=c.getEffectBySource(buff);
+					if(b!=null)c.loseBuff(b);
+				});
 			}
 		}
 		
-		protected boolean filter(Buff buff,Game game,Card card)
-		{
-			return true;
-		}
+		protected abstract boolean filter(Buff buff,Game game,Card card);
 				
 	}
 	
-	public static class MyOtherMinionBuffInfo extends MyMinionBuffInfo
+	public static class MyOtherMinionBuffInfo extends TableBuffInfo
 	{
 		public MyOtherMinionBuffInfo(KeyWord[] keyWords,BuffInfo effectInfo,String effectName)
 		{
@@ -122,7 +115,7 @@ public class Cards {
 		@Override
 		protected boolean filter(Buff buff,Game game,Card card)
 		{
-			return buff.toBuff!=card;
+			return buff.toBuff!=card&&card.getPosition()==Position.MINION&&card.getOwner()==buff.toBuff.getOwner();
 		}
 	}
 	
@@ -139,7 +132,7 @@ public class Cards {
 		}
 		
 		@Override
-		public void onTrigger(Buff buff,Game game,Event event)
+		public void onTrigger(Buff buff,Event event)
 		{
 			if(event instanceof GainBuffEvent)buff.toBuff.pp(atk,HP,false);
 			else buff.toBuff.pp(-atk,-HP,false);
@@ -162,13 +155,13 @@ public class Cards {
 		}
 		
 		@Override
-		public void onTrigger(Buff buff,Game game,Event event)
+		public void onTrigger(Buff buff,Event event)
 		{
 			if(event instanceof AfterTurnEndEvent)buff.toBuff.loseBuff(buff);
-			else onExtraEvents(buff,game,event);
+			else onExtraEvents(buff,event);
 		}
 		
-		public void onExtraEvents(Buff buff,Game game,Event event)
+		public void onExtraEvents(Buff buff,Event event)
 		{
 		}
 	}
@@ -177,11 +170,21 @@ public class Cards {
 	{
 		private static Object[] events(Object[] c)
 		{
-			if(c==null)return new Object[]{AfterTurnEndEvent.class,GainBuffEvent.class,LoseBuffEvent.class};
-			Object[] rt=Arrays.copyOf(c,c.length+3);
-			rt[c.length]=AfterTurnEndEvent.class;
-			rt[c.length+1]=GainBuffEvent.class;
-			rt[c.length+2]=LoseBuffEvent.class;
+			int l;
+			Object[] rt;
+			if(c==null)
+			{
+				l=0;
+				rt=new Object[3];
+			}
+			else
+			{
+				l=c.length;
+				rt=Arrays.copyOf(c,c.length+3);
+			}
+			rt[l]=AfterTurnEndEvent.class;
+			rt[l+1]=GainBuffEvent.class;
+			rt[l+2]=LoseBuffEvent.class;
 			return rt;
 		}
 		
@@ -196,15 +199,15 @@ public class Cards {
 		}
 		
 		@Override
-		public void onTrigger(Buff buff,Game game,Event event)
+		public void onTrigger(Buff buff,Event event)
 		{
 			if(event instanceof AfterTurnEndEvent)buff.toBuff.loseBuff(buff);
 			else if(event instanceof GainBuffEvent)buff.toBuff.pp(atk,HP,false);
 			else if(event instanceof LoseBuffEvent)buff.toBuff.pp(-atk,-HP,false);
-			else onExtraEvents(buff,game,event);
+			else onExtraEvents(buff,event);
 		}
 		
-		public void onExtraEvents(Buff buff,Game game,Event event)
+		public void onExtraEvents(Buff buff,Event event)
 		{
 		}
 	}
@@ -248,19 +251,25 @@ public class Cards {
 	
 	public static class DKCardInfo extends CardInfo
 	{
-		private final int armor;
+		private static class Impl extends BuffInfo
+		{
+			int armor;
+			
+			Impl(int armor)
+			{
+				super(null,new Object[]{EnterTableEvent.class},false);
+			}
+			
+			@Override
+			public void onTrigger(Buff buff,Event event)
+			{
+				buff.toBuff.getOwner().gainArmor(armor);
+			}
+		}
 		
 		public DKCardInfo(String name,Clz clz,Race[] races,int cost,int choices,CardInfo skill,int armor)
 		{
-			super(name,clz,races,Type.HERO,true,cost,0,0,false,null,choices,skill);
-			this.armor=armor;
-		}
-		
-		@Override
-		public boolean changeHero(Player player,Card oldHero,Card newHero)
-		{
-			player.gainArmor(armor);
-			return false;
+			super(name,clz,races,Type.HERO,true,cost,0,0,false,new BuffInfo[]{new Impl(armor)},choices,skill);
 		}
 	}
 	

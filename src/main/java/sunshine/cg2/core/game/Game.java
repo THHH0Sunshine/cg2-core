@@ -6,7 +6,8 @@ import java.util.function.Consumer;
 
 import sunshine.cg2.core.game.event.DeathrattleEvent;
 import sunshine.cg2.core.game.event.Event;
-import sunshine.cg2.core.game.event.globalevent.MinionLeaveEvent;
+import sunshine.cg2.core.game.event.globalevent.GlobalEvent;
+import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
 import sunshine.cg2.core.util.JSONObject;
 
 public class Game {
@@ -81,6 +82,19 @@ public class Game {
 	private int current;
 	private int round;
 	
+	void addCardToTable(Card card,Card.Position pos,Player owner)
+	{
+		card.initOnTable(pos,owner,nextNumber++);
+		table.add(card);
+		for(Buff b:card.getAllBuffs())if(b.info.events!=null)registerEvents(b,GlobalEvent.class);
+	}
+	
+	void removeCardFromTable(Card card)
+	{
+		for(Buff b:card.getAllBuffs())unregisterEvents(b);
+		table.remove(card);
+	}
+	
 	void broadcast(Msg msg,JSONObject jsonobj,int except)
 	{
 		for(int i=0;i<players.length;i++)if(i!=except)sendto(i,msg,jsonobj);
@@ -132,12 +146,6 @@ public class Game {
 		}
 	}
 	
-	public int addCardToTable(Card card)
-	{
-		table.add(card);
-		return nextNumber++;
-	}
-	
 	public int checkForDeath(boolean completely) throws GameOverThrowable
 	{
 		int rt=0;
@@ -151,16 +159,16 @@ public class Game {
 			{
 				switch(c.getPosition())
 				{
-				case HERO:
 				case MINION:
-					c.getOwner().removeMinion(c,MinionLeaveEvent.Reason.DEATH);
+					c.getOwner().removeMinion(c,LeaveTableEvent.Reason.DEATH);
 					//players[c.getMinionOwnerId()].addDeath(c.info.id);
 					break;
 				default:
-					table.remove(c);
+					triggerEvent(new LeaveTableEvent(c,LeaveTableEvent.Reason.DEATH));
+					removeCardFromTable(c);
 				}
 			}
-			for(Card c:dying)for(Buff b:c.getAllBuffs())b.triggerSelf(this,new DeathrattleEvent());
+			for(Card c:dying)for(Buff b:c.getAllBuffs())b.triggerSelf(new DeathrattleEvent());
 			rt++;
 		}while(completely);
 		return rt;
@@ -226,11 +234,6 @@ public class Game {
 		eventHandler.register(buff,select);
 	}
 	
-	public void removeCardFromTable(Card card)
-	{
-		table.remove(card);
-	}
-	
 	public void run()
 	{
 		first=rule.chooseFirst(players.length);
@@ -290,7 +293,7 @@ public class Game {
 	
 	public void triggerEvent(Event e)
 	{
-		eventHandler.triggerEvent(this,e);
+		eventHandler.triggerEvent(e);
 	}
 	
 	public void unregisterEvents(Buff buff)

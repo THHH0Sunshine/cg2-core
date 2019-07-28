@@ -93,7 +93,7 @@ public class Card {
 			{"shield",shield},
 			{"armor",armor},
 			{"buff",rtBuff},
-			{"tabletags",info.getHandTags(this)}
+			{"tabletags",info.getTableTags(this)}
 		});
 	}
 	
@@ -102,17 +102,18 @@ public class Card {
 		wind++;
 	}
 	
-	void replaceOldHero(Player player,Card old)
+	void replaceOldHero(Card old)
 	{
-		initOnTable(Position.HERO,player,-1);
-		if(!info.changeHero(player,old,this))
+		if(info.HP<=0)
 		{
 			maxHP=old.maxHP;
 			HP=old.HP;
 		}
 		atk=old.atk;
+		armor=old.armor;
 		wind=old.wind;
-		for(Buff b:old.buffs)if(b.info.isEffect)buffs.add(b);
+		for(Buff b:old.buffs)buffs.add(b);
+		tags.putAll(old.tags);
 	}
 	
 	void resetWind()
@@ -134,7 +135,7 @@ public class Card {
 		}
 	}
 	
-	public void attack(Card target,byte[] extra)
+	public void attack(Card target)
 	{
 		for(Buff b:buffs)
 		{
@@ -144,7 +145,7 @@ public class Card {
 				if(kw.equals(BuffInfo.KeyWord.STEALTH))
 				{
 					NormalLosingEvent e=new NormalLosingEvent();
-					b.triggerSelf(game,e);
+					b.triggerSelf(e);
 					if(!e.prevent)loseBuff(b);
 					break;
 				}
@@ -157,15 +158,16 @@ public class Card {
 		Card sinj = f ? target : this;
 		finj.takeDamage(sinj,sinj.atk);
 		sinj.takeDamage(finj,finj.atk);
+		if(position==Position.HERO)owner.damageWeapon();
 	}
 	
-	public void gainBuff(BuffInfo buffInfo,String name,Card effectSource)
+	public void gainBuff(BuffInfo buffInfo,String name,Buff effectSource)
 	{
 		Buff buff = new Buff(buffInfo,name,this,effectSource);
 		buffs.add(buff);
 		if(buffInfo.events!=null)game.registerEvents(buff,GlobalEvent.class);
 		game.broadcast(Game.Msg.GAINBUFF,new JSONObject(new Object[][]{{"hash",hashCode()},{"buff",buff.getObject()}}),-1);
-		buff.triggerSelf(game,new GainBuffEvent());
+		buff.triggerSelf(new GainBuffEvent());
 	}
 	
 	public Buff[] getAllBuffs()
@@ -183,10 +185,15 @@ public class Card {
 		return cost;
 	}
 	
-	public Buff getEffectBySource(Card source)
+	public Buff getEffectBySource(Buff source)
 	{
 		for(Buff b:buffs)if(b.effectSource==source)return b;
 		return null;
+	}
+	
+	public Game getGame()
+	{
+		return game;
 	}
 	
 	public int getMaxWind()
@@ -266,7 +273,7 @@ public class Card {
 	{
 		int ind=buffs.indexOf(buff);
 		if(ind<0)return;
-		buff.triggerSelf(game,new LoseBuffEvent());
+		buff.triggerSelf(new LoseBuffEvent());
 		game.unregisterEvents(buff);
 		buffs.remove(buff);
 		game.broadcast(Game.Msg.LOSEBUFF,new JSONObject(new Object[][]{{"index",ind},{"hash",hashCode()}}),-1);

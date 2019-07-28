@@ -75,11 +75,6 @@ public class CardInfo {
 		return true;
 	}
 	
-	public boolean changeHero(Player player,Card oldHero,Card newHero)
-	{
-		return false;
-	}
-	
 	public void doBattlecry(Card card,Player player,Card target,int choi)
 	{
 	}
