@@ -46,7 +46,7 @@ public class Cards {
 				{
 					game.forEachCardOnTable(c->
 					{
-						if(filter(buff,game,c))
+						if(filter(buff,c))
 						{
 							c.gainBuff(effectInfo,effectName,buff);
 						}
@@ -54,7 +54,7 @@ public class Cards {
 				}
 				else
 				{
-					if(filter(buff,game,who))
+					if(filter(buff,who))
 					{
 						who.gainBuff(effectInfo,effectName,buff);
 					}
@@ -85,7 +85,7 @@ public class Cards {
 			{
 				game.forEachCardOnTable(c->
 				{
-					if(filter(buff,game,c))
+					if(filter(buff,c))
 					{
 						c.gainBuff(effectInfo,effectName,buff);
 					}
@@ -101,7 +101,7 @@ public class Cards {
 			}
 		}
 		
-		protected abstract boolean filter(Buff buff,Game game,Card card);
+		protected abstract boolean filter(Buff buff,Card card);
 				
 	}
 	
@@ -113,7 +113,7 @@ public class Cards {
 		}
 		
 		@Override
-		protected boolean filter(Buff buff,Game game,Card card)
+		protected boolean filter(Buff buff,Card card)
 		{
 			return buff.toBuff!=card&&card.getPosition()==Position.MINION&&card.getOwner()==buff.toBuff.getOwner();
 		}
@@ -273,6 +273,26 @@ public class Cards {
 		}
 	}
 	
+	/*
+	cg2:dummy
+	cg2:hero0
+	cg2:minion0
+	cg2:spell0
+	hs.basic:albkbhz
+	hs.basic:assj
+	hs.basic:hs
+	hs.basic:jh
+	hs.basic:sll
+	hs.basic:xhs
+	hs.basic:yhs
+	hs.basic:ympx
+	hs.basic:yxcz
+	hs.basic:yxyj
+	hs.basic:zj
+	hs.basic:zlzc
+	hs.basic:zzs
+	hs.basic:~flgs
+	*/
 	private static final CardInfo[] basicCards=
 	{
 		new CardInfo("cg2:dummy",Clz.NONE,null,Type.NONE,false,0,0,0,false,null,1,null),
@@ -364,6 +384,22 @@ public class Cards {
 			}
 		},
 		new NullTargetCardInfo("hs.basic:albkbhz",Clz.DRUID,null,Type.MINION,8,8,8,false,new BuffInfo[]{new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)},1,null),
+		new DamageSpellCardInfo("hs.basic:assj",Clz.HUNTER,null,1,1,2),
+		new NullTargetCardInfo("hs.basic:sll",Clz.HUNTER,new Race[]{Race.BEAST},Type.MINION,1,1,1,false,new BuffInfo[]{new MyOtherMinionBuffInfo(null,new PPEffectBuffInfo(null,1,0),"hs.basic:sll")
+			{
+				@Override protected boolean filter(Buff buff,Card card)
+				{
+					return super.filter(buff,card)&&card.hasRace(Race.BEAST);
+				}
+			}},1,null),
+		new NullTargetCardInfo("hs.basic:zzs",Clz.HUNTER,null,Type.SPELL,1,0,0,false,null,1,null)
+		{
+			@Override
+			public void doBattlecry(Card card,Player player,Card target,int choi)
+			{
+				//
+			}
+		},
 	};
 	
 	public static final CardPackage BASIC_CARDS=new CardPackage(){public CardInfo[] getAllCards(){return basicCards.clone();}};
