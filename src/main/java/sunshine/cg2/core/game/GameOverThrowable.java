@@ -1,6 +1,6 @@
 package sunshine.cg2.core.game;
 
-class GameOverThrowable extends Throwable {
+public class GameOverThrowable extends Throwable {
 
 	private static final long serialVersionUID = 7881776143142507181L;
 	

@@ -3,6 +3,7 @@ package sunshine.cg2.core.game;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import sunshine.cg2.core.game.Game.Msg;
 import sunshine.cg2.core.game.event.NormalLosingEvent;
 import sunshine.cg2.core.game.event.globalevent.AfterTurnEndEvent;
 import sunshine.cg2.core.game.event.globalevent.EnterTableEvent;
@@ -420,6 +421,16 @@ public class Player {
 		return null;
 	}
 	
+	public int askForDiscover(Card[] choices) throws GameOverThrowable
+	{
+		JSONArray ja=new JSONArray(choices.length);
+		for(Card c:choices)ja.add(c.getDisplayObject());
+		game.sendto(index,Msg.ASKFORDISCOVER,new JSONObject(new Object[][]{{"choices",ja}}));
+		byte[] reply=game.recvfrom(index);
+		if(reply.length<=0||reply[0]<0||reply[0]>=choices.length)leave(false);
+		return reply[0];
+	}
+	
 	public void burn()
 	{
 		if(deck.isEmpty())return;
@@ -524,6 +535,18 @@ public class Player {
 		game.broadcast(Game.Msg.OGET,new JSONObject(new Object[][]{{"who",index}}),index);
 	}
 	
+	public Card[] popDeck(int num)
+	{
+		if(num<=0)return null;
+		int len=deck.size();
+		if(len<=0)return null;
+		if(num>len)num=len;
+		Card[] rt=new Card[num];
+		for(int i=0;i<num;i++)rt[i]=deck.remove(0);
+		game.broadcast(Game.Msg.THROWDECK,new JSONObject(new Object[][]{{"who",index},{"num",num}}),-1);
+		return rt;
+	}
+	
 	public void removeMinion(Card minion,LeaveTableEvent.Reason reason)
 	{
 		int posi=field.indexOf(minion);
@@ -547,12 +570,6 @@ public class Player {
 		if(coins<num)num=coins;
 		coins-=num;
 		game.broadcast(Game.Msg.SPENDCOINS,new JSONObject(new Object[][]{{"who",index},{"num",num}}),-1);
-	}
-	
-	public void throwDeck(int index)
-	{
-		deck.remove(index);
-		game.broadcast(Game.Msg.THROWDECK,new JSONObject(new Object[][]{{"who",index}}),-1);
 	}
 	
 	public void throwHand(int index)

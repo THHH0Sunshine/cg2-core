@@ -75,7 +75,7 @@ public class CardInfo {
 		return true;
 	}
 	
-	public void doBattlecry(Card card,Player player,Card target,int choi)
+	public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
 	{
 	}
 	

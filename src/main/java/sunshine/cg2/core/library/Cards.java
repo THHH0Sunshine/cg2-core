@@ -9,6 +9,7 @@ import sunshine.cg2.core.game.Card.Position;
 import sunshine.cg2.core.game.CardInfo;
 import sunshine.cg2.core.game.CardPackage;
 import sunshine.cg2.core.game.Game;
+import sunshine.cg2.core.game.GameOverThrowable;
 import sunshine.cg2.core.game.Player;
 import sunshine.cg2.core.game.BuffInfo.KeyWord;
 import sunshine.cg2.core.game.CardInfo.Clz;
@@ -395,9 +396,14 @@ public class Cards {
 		new NullTargetCardInfo("hs.basic:zzs",Clz.HUNTER,null,Type.SPELL,1,0,0,false,null,1,null)
 		{
 			@Override
-			public void doBattlecry(Card card,Player player,Card target,int choi)
+			public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
 			{
-				//
+				Card[] top=player.popDeck(3);
+				if(top!=null)
+				{
+					int ind=player.askForDiscover(top);
+					player.obtain(top[ind]);
+				}
 			}
 		},
 	};

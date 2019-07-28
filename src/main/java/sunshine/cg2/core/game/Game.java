@@ -30,6 +30,7 @@ public class Game {
 		//CardDisplayObject:{name:string,cost:int,atk:int,hp:int,canplay:boolean,type:string,handtags:{...}}
 		//CardFullObject:{hash:int,name:string,atk:int,maxhp:int,hp:int,shield:boolean,armor:int,buff:[BuffObject],tabletags:{...}}
 		NULL,
+		ASKFORDISCOVER,//{choices:[CardDisplayObject]}
 		ASKFORFIRST,
 		ATTACK,//{fromhash:int,tohash:int}
 		BREAKWEAPON,//{who:int}
@@ -66,7 +67,7 @@ public class Game {
 		SPENDCOINS,//{who:int,num:int}
 		STOPPLAY,
 		SUMMON,//{pIndex:int,mIndex:int,card:CardFullObject}
-		THROWDECK,//{who:int}
+		THROWDECK,//{who:int,num:int}
 		THROWHAND,//{who:int,index:int}
 		TURN,//{who:int}
 	}
