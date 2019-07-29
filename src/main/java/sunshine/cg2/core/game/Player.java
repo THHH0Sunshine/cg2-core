@@ -499,9 +499,10 @@ public class Player {
 		return rt;
 	}
 	
-	public Card[] getField()
+	@SuppressWarnings("unchecked")
+	public List<Card> getField()
 	{
-		return field.toArray(new Card[0]);
+		return (List<Card>)field.clone();
 	}
 	
 	public int getFieldNum()

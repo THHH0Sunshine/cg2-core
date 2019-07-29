@@ -1,6 +1,7 @@
 package sunshine.cg2.core.library;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import sunshine.cg2.core.game.Buff;
@@ -103,11 +104,24 @@ public class Cards {
 			}
 		}
 		
-		protected abstract boolean filter(Buff buff,Card card);
-				
+		protected abstract boolean filter(Buff buff,Card card);			
 	}
 	
-	public static class MyOtherMinionBuffInfo extends TableBuffInfo
+	public static class MyMinionBuffInfo extends TableBuffInfo
+	{
+		public MyMinionBuffInfo(KeyWord[] keyWords,BuffInfo effectInfo,String effectName)
+		{
+			super(keyWords,effectInfo,effectName);
+		}
+		
+		@Override
+		protected boolean filter(Buff buff,Card card)
+		{
+			return card.getPosition()==Position.MINION&&card.getOwner()==buff.toBuff.getOwner();
+		}
+	}
+	
+	public static class MyOtherMinionBuffInfo extends MyMinionBuffInfo
 	{
 		public MyOtherMinionBuffInfo(KeyWord[] keyWords,BuffInfo effectInfo,String effectName)
 		{
@@ -117,7 +131,7 @@ public class Cards {
 		@Override
 		protected boolean filter(Buff buff,Card card)
 		{
-			return buff.toBuff!=card&&card.getPosition()==Position.MINION&&card.getOwner()==buff.toBuff.getOwner();
+			return buff.toBuff!=card&&super.filter(buff,card);
 		}
 	}
 	
@@ -290,6 +304,7 @@ public class Cards {
 	hs.basic:sll
 	hs.basic:slml
 	hs.basic:xhs
+	hs.basic:xss
 	hs.basic:yhs
 	hs.basic:ympx
 	hs.basic:yxcz
@@ -482,6 +497,35 @@ public class Cards {
 				for(;len>0;len--)minions.remove((int)(Math.random()*len)).takeDamage(card,3);
 			}
 		},
+		new CardInfo("hs.basic:xss",Clz.HUNTER,null,Type.MINION,true,4,4,3,false,null,1,null)
+		{
+			@Override
+			public boolean canTarget(Card card,Player player,Card target,int choi)
+			{
+				HashSet<Card> cs=new HashSet<>();
+				for(Card c:player.getField())
+					if(c.getPosition()==Position.MINION&&c.hasRace(Race.BEAST))
+						cs.add(c);
+				return cs.isEmpty()?target==null:cs.contains(target);
+			}
+			
+			@Override
+			public void doBattlecry(Card card,Player player,Card target,int choi)
+			{
+				if(target!=null)
+				{
+					target.pp(2,2,true);
+					target.gainBuff(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false),name,null);
+				}
+			}
+		},
+		new NullTargetCardInfo("hs.basic:tyxn",Clz.HUNTER,new Race[]{Race.BEAST},Type.MINION,5,2,5,false,new BuffInfo[]{new MyMinionBuffInfo(null,new BuffInfo(new KeyWord[]{KeyWord.CHARGE},null,true),"hs.basic:tyxn")
+			{
+				@Override protected boolean filter(Buff buff,Card card)
+				{
+					return super.filter(buff,card)&&card.hasRace(Race.BEAST);
+				}
+			}},1,null),
 	};
 	
 	public static final CardPackage BASIC_CARDS=new CardPackage(){public CardInfo[] getAllCards(){return basicCards.clone();}};
