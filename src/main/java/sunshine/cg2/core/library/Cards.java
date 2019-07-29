@@ -1,6 +1,7 @@
 package sunshine.cg2.core.library;
 
 import java.util.Arrays;
+import java.util.List;
 
 import sunshine.cg2.core.game.Buff;
 import sunshine.cg2.core.game.BuffInfo;
@@ -281,9 +282,13 @@ public class Cards {
 	cg2:spell0
 	hs.basic:albkbhz
 	hs.basic:assj
+	hs.basic:dcsj
+	hs.basic:dwhb
 	hs.basic:hs
 	hs.basic:jh
+	hs.basic:lryj
 	hs.basic:sll
+	hs.basic:slml
 	hs.basic:xhs
 	hs.basic:yhs
 	hs.basic:ympx
@@ -293,6 +298,9 @@ public class Cards {
 	hs.basic:zlzc
 	hs.basic:zzs
 	hs.basic:~flgs
+	hs.basic:~hf
+	hs.basic:~lok
+	hs.basic:~ms
 	*/
 	private static final CardInfo[] basicCards=
 	{
@@ -404,6 +412,74 @@ public class Cards {
 					int ind=player.askForDiscover(top);
 					player.obtain(top[ind]);
 				}
+			}
+		},
+		new CardInfo("hs.basic:lryj",Clz.HUNTER,null,Type.SPELL,true,1,0,0,false,null,1,null)
+		{
+			@Override
+			public boolean canTarget(Card card,Player player,Card target,int choi)
+			{
+				return target!=null&&target.getPosition()==Position.MINION;
+			}
+			
+			@Override
+			public void doBattlecry(Card card,Player player,Card target,int choi)
+			{
+				target.setHP(1);
+			}
+		},
+		new NullTargetCardInfo("hs.basic:dwhb",Clz.HUNTER,null,Type.SPELL,3,0,0,false,null,1,null)
+		{
+			final String[] choices=new String[]{"hs.basic:~hf","hs.basic:~ms","hs.basic:~lok"};
+			
+			@Override
+			public boolean canTarget(Card card,Player player,Card target,int choi)
+			{
+				return player.getFieldNum()<player.getGame().getRule().maxField;
+			}
+			
+			@Override
+			public void doBattlecry(Card card,Player player,Card target,int choi)
+			{
+				Game game=player.getGame();
+				int who=(int)(Math.random()*3);
+				player.summon(game.createCard(choices[who],-1));
+			}
+		},
+		new NullTargetCardInfo("hs.basic:~hf",Clz.HUNTER,new Race[]{Race.BEAST},Type.MINION,3,4,2,false,new BuffInfo[]{new BuffInfo(new KeyWord[]{KeyWord.CHARGE},null,false)},1,null),
+		new NullTargetCardInfo("hs.basic:~ms",Clz.HUNTER,new Race[]{Race.BEAST},Type.MINION,3,4,4,false,new BuffInfo[]{new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)},1,null),
+		new NullTargetCardInfo("hs.basic:~lok",Clz.HUNTER,new Race[]{Race.BEAST},Type.MINION,3,2,4,false,new BuffInfo[]{new MyOtherMinionBuffInfo(null,new PPEffectBuffInfo(null,1,0),"hs.basic:~lok")},1,null),
+		new DamageSpellCardInfo("hs.basic:slml",Clz.HUNTER,null,3,1,3)
+		{
+			@Override
+			public void doBattlecry(Card card,Player player,Card target,int choi)
+			{
+				for(Card c:player.getField())
+					if(c.getPosition()==Position.MINION&&c.hasRace(Race.BEAST))
+					{
+						target.takeDamage(card,5);
+						return;
+					}
+				super.doBattlecry(card,player,target,choi);
+			}
+		},
+		new CardInfo("hs.basic:dcsj",Clz.HUNTER,null,Type.SPELL,true,4,0,0,false,null,1,null)
+		{
+			@Override
+			public boolean canTarget(Card card,Player player,Card target,int choi)
+			{
+				Game game=player.getGame();
+				return target==null&&game.getPlayer((player.getIndex()+1)%game.getPlayerCount()).getMinionNum()<2;
+			}
+			
+			@Override
+			public void doBattlecry(Card card,Player player,Card target,int choi)
+			{
+				Game game=player.getGame();
+				List<Card> minions=game.getPlayer((player.getIndex()+1)%game.getPlayerCount()).getAllMinions();
+				int len=minions.size();
+				if(len>2)len=2;
+				for(;len>0;len--)minions.remove((int)(Math.random()*len)).takeDamage(card,3);
 			}
 		},
 	};

@@ -2,6 +2,7 @@ package sunshine.cg2.core.game;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 import sunshine.cg2.core.game.Game.Msg;
 import sunshine.cg2.core.game.event.NormalLosingEvent;
@@ -94,7 +95,7 @@ public class Player {
 		switch(card.info.type)
 		{
 		case MINION:
-			summon(card,posi);
+			summon0(card,posi);
 			break;
 		case SPELL:
 			break;
@@ -111,7 +112,7 @@ public class Player {
 		game.checkForDeath(true);
 	}
 	
-	private void summon(Card minion,int posi)
+	private void summon0(Card minion,int posi)
 	{
 		int n=getFieldNum();
 		if(n>=game.getRule().maxField)return;
@@ -491,6 +492,13 @@ public class Player {
 		return true;
 	}
 	
+	public List<Card> getAllMinions()
+	{
+		ArrayList<Card> rt=new ArrayList<>(field.size());
+		for(Card c:field)if(c.getPosition()==Card.Position.MINION)rt.add(c);
+		return rt;
+	}
+	
 	public Card[] getField()
 	{
 		return field.toArray(new Card[0]);
@@ -514,6 +522,13 @@ public class Player {
 	public int getIndex()
 	{
 		return index;
+	}
+	
+	public int getMinionNum()
+	{
+		int rt=0;
+		for(Card c:field)if(c.getPosition()==Card.Position.MINION)rt++;
+		return rt;
 	}
 	
 	public void loseEmptyCoins(int num)
@@ -570,6 +585,16 @@ public class Player {
 		if(coins<num)num=coins;
 		coins-=num;
 		game.broadcast(Game.Msg.SPENDCOINS,new JSONObject(new Object[][]{{"who",index},{"num",num}}),-1);
+	}
+	
+	public void summon(Card minion,int posi)
+	{
+		summon0(minion,posi);
+	}
+	
+	public void summon(Card minion)
+	{
+		summon(minion,field.size());
 	}
 	
 	public void throwHand(int index)

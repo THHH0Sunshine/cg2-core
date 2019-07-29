@@ -319,6 +319,24 @@ public class Card {
 		game.broadcast(Game.Msg.HEAL,toSend,-1);
 	}
 	
+	public void setAtk(int atk)
+	{
+		pp(atk-this.atk-datk,0,true);
+	}
+	
+	public void setAtkAndHP(int atk,int HP)
+	{
+		this.HP=maxHP;
+		int patk=atk-this.atk-datk;
+		int pHP=HP-this.HP-dHP;
+		pp(patk,pHP,true);
+	}
+	public void setHP(int HP)
+	{
+		this.HP=maxHP;
+		pp(0,HP-this.HP-dHP,true);
+	}
+	
 	public void silence()
 	{
 		Iterator<Buff> it = buffs.iterator();
