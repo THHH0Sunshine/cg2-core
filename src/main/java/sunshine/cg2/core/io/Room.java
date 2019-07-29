@@ -22,8 +22,8 @@ public class Room implements IO {
 			for(Client c:clients)c.send("{start:true}");
 			CardSet[] ds=new CardSet[clients.size()];
 			String[] d=new String[20];
-			for(int i=0;i<d.length/2;i++)d[i]="cg2:minion0";
-			for(int i=d.length/2;i<d.length;i++)d[i]="hs.basic:zlzc";
+			for(int i=0;i<d.length/2;i++)d[i]="hs.basic:dwhb";
+			for(int i=d.length/2;i<d.length;i++)d[i]="hs.basic:zzs";
 			for(int i=0;i<ds.length;i++)ds[i]=new CardSet("cg2:hero0",d);
 			Game g=new Game(new GamePackage(new CardPackage[]{Cards.BASIC_CARDS}),Rules.HEARTHSTONE,ds,Room.this);
 			g.run();

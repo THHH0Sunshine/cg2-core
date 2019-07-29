@@ -330,7 +330,7 @@ public class Player {
 		{
 			Card c=i<0?hero:field.get(i);
 			if(!c.positionIsMinionOrHero())continue;
-			if((c.getWind()>=0||c.hasKW(BuffInfo.KeyWord.CHARGE)||c.hasKW(BuffInfo.KeyWord.RUSH))&&c.getWind()<c.getMaxWind())
+			if(c.isWindNotFull())
 			{
 				for(Buff b:c.getAllBuffs())
 				{

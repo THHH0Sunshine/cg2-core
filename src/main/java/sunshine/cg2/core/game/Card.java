@@ -37,6 +37,7 @@ public class Card {
 	private boolean shield;
 	private int armor;
 	private boolean dying;
+	private boolean sleeping;
 	private int wind;
 	private final LinkedList<Buff> buffs=new LinkedList<>();
 	private Player owner;
@@ -118,6 +119,7 @@ public class Card {
 	
 	void resetWind()
 	{
+		sleeping=false;
 		wind=0;
 	}
 	
@@ -129,7 +131,7 @@ public class Card {
 		switch(position)
 		{
 		case MINION:
-			wind=-1;
+			sleeping=true;
 			break;
 		default:
 		}
@@ -151,7 +153,7 @@ public class Card {
 				}
 			}
 		}
-		if(wind>=0)wind++;
+		wind++;
 		game.broadcast(Game.Msg.ATTACK,new JSONObject(new Object[][]{{"fromhash",hashCode()},{"tohash",target.hashCode()}}),-1);
 		boolean f = this.number < target.number;
 		Card finj = f ? this : target;
@@ -226,15 +228,10 @@ public class Card {
 		HashSet<BuffInfo.KeyWord> kws=new HashSet<>();
 		for(Buff b:buffs)if(b.info.keyWords!=null)for(BuffInfo.KeyWord kw:b.info.keyWords)kws.add(kw);
 		if(kws.contains(BuffInfo.KeyWord.WOOD)||kws.contains(BuffInfo.KeyWord.FROZEN)||atk<=0||wind>=getMaxWind())return 0;
-		if(wind>=0)return 2;
+		if(!sleeping)return 2;
 		if(kws.contains(BuffInfo.KeyWord.CHARGE))return 2;
 		if(kws.contains(BuffInfo.KeyWord.RUSH))return 1;
 		return 0;
-	}
-	
-	public int getWind()
-	{
-		return wind;
 	}
 	
 	public boolean hasKW(BuffInfo.KeyWord kW)
@@ -262,6 +259,11 @@ public class Card {
 	public boolean isDying()
 	{
 		return dying;
+	}
+	
+	boolean isWindNotFull()
+	{
+		return wind<getMaxWind();
 	}
 	
 	public void kill()
