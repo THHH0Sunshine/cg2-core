@@ -3,10 +3,8 @@ package sunshine.cg2.core.io;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import sunshine.cg2.core.game.CardPackage;
 import sunshine.cg2.core.game.CardSet;
 import sunshine.cg2.core.game.Game;
-import sunshine.cg2.core.game.GamePackage;
 import sunshine.cg2.core.game.IO;
 import sunshine.cg2.core.library.Cards;
 import sunshine.cg2.core.library.Rules;
@@ -23,9 +21,9 @@ public class Room implements IO {
 			CardSet[] ds=new CardSet[clients.size()];
 			String[] d=new String[20];
 			for(int i=0;i<d.length/2;i++)d[i]="hs.basic:dwhb";
-			for(int i=d.length/2;i<d.length;i++)d[i]="hs.basic:zzs";
-			for(int i=0;i<ds.length;i++)ds[i]=new CardSet("cg2:hero0",d);
-			Game g=new Game(new GamePackage(new CardPackage[]{Cards.BASIC_CARDS}),Rules.HEARTHSTONE,ds,Room.this);
+			for(int i=d.length/2;i<d.length;i++)d[i]="hs.basic:jedtj";
+			for(int i=0;i<ds.length;i++)ds[i]=new CardSet("~hs.basic:hdruid",d);
+			Game g=new Game(Cards.DEFAULT_LIBRARY,new String[]{"hs.basic"},Rules.HEARTHSTONE,ds,Room.this);
 			g.run();
 			for(Client c:clients)c.send("{stop:true}");
 			started=false;
@@ -46,7 +44,7 @@ public class Room implements IO {
 	public void leave(Client client)
 	{
 		if(client==null)return;
-		if(started)postMessage(client,new byte[]{0});//if started 'turn into a computer'
+		if(started)postMessage(client,new byte[]{0});
 		clients.remove(client);
 	}
 	

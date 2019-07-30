@@ -4,6 +4,10 @@ import sunshine.cg2.core.game.Rule;
 
 public class Rules {
 
+	private Rules()
+	{
+	}
+	
 	public static final Rule TEST=new Rule("cg2:test",10,10,999,10,7)
 	{
 		@Override public boolean canChangeFirst(int pos,int num)

@@ -9,6 +9,7 @@ import sunshine.cg2.core.game.event.NormalLosingEvent;
 import sunshine.cg2.core.game.event.globalevent.AfterTurnEndEvent;
 import sunshine.cg2.core.game.event.globalevent.EnterTableEvent;
 import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
+import sunshine.cg2.core.game.event.globalevent.SummonEvent;
 import sunshine.cg2.core.util.JSONArray;
 import sunshine.cg2.core.util.JSONObject;
 
@@ -109,6 +110,9 @@ public class Player {
 			return;
 		}
 		card.info.doBattlecry(card,this,target,choi);
+		game.checkForDeath(true);
+		if(card.info.type==CardInfo.Type.MINION&&card.getPosition()==Card.Position.MINION&&game.isCardOnTable(card))
+			game.triggerEvent(new SummonEvent(card));
 		game.checkForDeath(true);
 	}
 	
@@ -588,12 +592,14 @@ public class Player {
 		game.broadcast(Game.Msg.SPENDCOINS,new JSONObject(new Object[][]{{"who",index},{"num",num}}),-1);
 	}
 	
-	public void summon(Card minion,int posi)
+	public void summon(Card minion,int posi) throws GameOverThrowable
 	{
 		summon0(minion,posi);
+		game.triggerEvent(new SummonEvent(minion));
+		game.checkForDeath(true);
 	}
 	
-	public void summon(Card minion)
+	public void summon(Card minion) throws GameOverThrowable
 	{
 		summon(minion,field.size());
 	}

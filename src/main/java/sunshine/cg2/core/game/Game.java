@@ -1,7 +1,10 @@
 package sunshine.cg2.core.game;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import sunshine.cg2.core.game.event.DeathrattleEvent;
@@ -72,8 +75,10 @@ public class Game {
 		TURN,//{who:int}
 	}
 	
-	private final IO io;
-	private final GamePackage pack;
+	private final Map<String,CardInfo> library;
+	private final HashMap<String,CardInfo> standardCards=new HashMap<>();
+	private final String[] usingPrefix;
+	private final IO io;	
 	private final Rule rule;
 	private final Player[] players;
 	private final EventHandler eventHandler=new EventHandler();
@@ -134,12 +139,19 @@ public class Game {
 		io.sendTo(to,rt);
 	}
 	
-	public Game(GamePackage pack,Rule rule,CardSet[] sets,IO io)
+	public Game(Map<String,CardInfo> library,String[] usingPrefix,Rule rule,CardSet[] sets,IO io)
 	{
 		int len=sets.length;
+		this.library=library;
 		this.io=io;
-		this.pack=pack;
 		this.rule=rule;
+		this.usingPrefix=usingPrefix;
+		library.forEach((s,c)->
+		{
+			for(String p:usingPrefix)
+				if(s.startsWith(p))
+					standardCards.put(s,c);
+		});
 		players=new Player[len];
 		for(int i=0;i<len;i++)
 		{
@@ -182,12 +194,22 @@ public class Game {
 	
 	public Card createCard(String name,int from)
 	{
-		return createCard(pack.getCardInfo(name),from);
+		return createCard(library.get(name),from);
 	}
 	
 	public Card createClear(Card card)
 	{
 		return createCard(card.info,card.from);
+	}
+	
+	public void forEachCardInLibrary(BiConsumer<? super String,? super CardInfo> action)
+	{
+		library.forEach(action);
+	}
+	
+	public void forEachCardInStandard(BiConsumer<? super String,? super CardInfo> action)
+	{
+		standardCards.forEach(action);
 	}
 	
 	public void forEachCardOnTable(Consumer<? super Card> action)
@@ -228,6 +250,16 @@ public class Game {
 	public Rule getRule()
 	{
 		return rule;
+	}
+	
+	public String[] getUsingPrefix()
+	{
+		return usingPrefix.clone();
+	}
+	
+	public boolean isCardOnTable(Card card)
+	{
+		return table.contains(card);
 	}
 	
 	public void registerEvents(Buff buff,Class<? extends Event> select)
