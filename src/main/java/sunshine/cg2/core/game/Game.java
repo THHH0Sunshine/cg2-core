@@ -36,15 +36,16 @@ public class Game {
 		ASKFORDISCOVER,//{choices:[CardDisplayObject]}
 		ASKFORFIRST,
 		ATTACK,//{fromhash:int,tohash:int}
-		BREAKWEAPON,//{who:int}
 		BURN,//{who:int,card:CardDisplayObject}
-		CANPLAY,//{minioncan:[{index:int,green:[{pIndex:int,mIndex:int}]}],handcan:[[[{pIndex:int,mIndex:int}]]]}
+		CANPLAY,//{minioncan:[{index:int,green:[{pIndex:int,mIndex:int}]}],handcan:[[[{pIndex:int,mIndex:int}]]],skillcan:[[{pIndex:int,mIndex:int}]]}
 		CHANGEFIRST,//{index:int,card:CardDisplayObject}
 		CHANGEHERO,//{who:int,card:CardFullObject}
 		CHANGEPP,//{hash:int,atk:int,maxhp:int,hp:int}
+		CHANGESKILL,//{who:int,card:CardDisplayObject}
 		CHECKCOINS,//{who:int,num:int}
 		CHECKDECK,//{who:int,num:int}
 		CHECKHERO,//{who:int,card:CardFullObject}
+		CHECKSKILL,//{who:int,card:CardDisplayObject}
 		DAMAGE,//{(fromhash):int,tohash:int,num:int}
 		DRAW,//{card:CardDisplayObject}
 		EQUIP,//{who:int,card:CardFullObject}
@@ -72,6 +73,7 @@ public class Game {
 		SUMMON,//{pIndex:int,mIndex:int,card:CardFullObject}
 		THROWDECK,//{who:int,num:int}
 		THROWHAND,//{who:int,index:int}
+		THROWWEAPON,//{who:int}
 		TURN,//{who:int}
 	}
 	
@@ -215,6 +217,11 @@ public class Game {
 	public void forEachCardOnTable(Consumer<? super Card> action)
 	{
 		table.forEach(action);
+	}
+	
+	public CardInfo getCardInLibraryFromName(String name)
+	{
+		return library.get(name);
 	}
 	
 	public Player getCurrentPlayer()

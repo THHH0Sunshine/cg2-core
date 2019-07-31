@@ -7,7 +7,6 @@ import java.util.LinkedList;
 
 import sunshine.cg2.core.game.event.GainBuffEvent;
 import sunshine.cg2.core.game.event.LoseBuffEvent;
-import sunshine.cg2.core.game.event.NormalLosingEvent;
 import sunshine.cg2.core.game.event.globalevent.GlobalEvent;
 import sunshine.cg2.core.util.JSONArray;
 import sunshine.cg2.core.util.JSONObject;
@@ -39,6 +38,7 @@ public class Card {
 	private boolean dying;
 	private boolean sleeping;
 	private int wind;
+	private boolean forceGreen;
 	private final LinkedList<Buff> buffs=new LinkedList<>();
 	private Player owner;
 	private int number;
@@ -100,6 +100,7 @@ public class Card {
 	
 	void incWind()
 	{
+		forceGreen=false;
 		wind++;
 	}
 	
@@ -120,6 +121,7 @@ public class Card {
 	void resetWind()
 	{
 		sleeping=false;
+		forceGreen=false;
 		wind=0;
 	}
 	
@@ -146,9 +148,7 @@ public class Card {
 			{
 				if(kw.equals(BuffInfo.KeyWord.STEALTH))
 				{
-					NormalLosingEvent e=new NormalLosingEvent();
-					b.triggerSelf(e);
-					if(!e.prevent)loseBuff(b);
+					loseBuff(b);
 					break;
 				}
 			}
@@ -161,6 +161,11 @@ public class Card {
 		finj.takeDamage(sinj,sinj.atk);
 		sinj.takeDamage(finj,finj.atk);
 		if(position==Position.HERO)owner.damageWeapon();
+	}
+	
+	public void forceGreen()
+	{
+		forceGreen=true;
 	}
 	
 	public void gainBuff(BuffInfo buffInfo,String name,Buff effectSource)
@@ -225,9 +230,10 @@ public class Card {
 	
 	public int getSpeed()
 	{
+		if(forceGreen)return 2;
 		HashSet<BuffInfo.KeyWord> kws=new HashSet<>();
 		for(Buff b:buffs)if(b.info.keyWords!=null)for(BuffInfo.KeyWord kw:b.info.keyWords)kws.add(kw);
-		if(kws.contains(BuffInfo.KeyWord.WOOD)||kws.contains(BuffInfo.KeyWord.FROZEN)||atk<=0||wind>=getMaxWind())return 0;
+		if(kws.contains(BuffInfo.KeyWord.WOOD)||kws.contains(BuffInfo.KeyWord.FROZEN)||info.type!=CardInfo.Type.SKILL&&atk<=0||wind>=getMaxWind())return 0;
 		if(!sleeping)return 2;
 		if(kws.contains(BuffInfo.KeyWord.CHARGE))return 2;
 		if(kws.contains(BuffInfo.KeyWord.RUSH))return 1;
@@ -259,11 +265,6 @@ public class Card {
 	public boolean isDying()
 	{
 		return dying;
-	}
-	
-	boolean isWindNotFull()
-	{
-		return wind<getMaxWind();
 	}
 	
 	public void kill()
@@ -337,6 +338,26 @@ public class Card {
 	{
 		this.HP=maxHP;
 		pp(0,HP-this.HP-dHP,true);
+	}
+	
+	boolean shouldBreakIce()
+	{
+		boolean charge=false;
+		for(Buff b:buffs)
+		{
+			if(b.info.keyWords!=null)
+			{
+				for(BuffInfo.KeyWord w:b.info.keyWords)
+				{
+					if(w==BuffInfo.KeyWord.CHARGE||w==BuffInfo.KeyWord.RUSH)
+					{
+						charge=true;
+						break;
+					}
+				}
+			}
+		}
+		return (charge||!sleeping)&&wind<getMaxWind();
 	}
 	
 	public void silence()

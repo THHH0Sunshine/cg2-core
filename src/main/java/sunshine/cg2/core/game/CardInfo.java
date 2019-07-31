@@ -11,6 +11,7 @@ public class CardInfo {
 		SPELL,
 		WEAPON,
 		HERO,
+		SKILL,
 		SPECIAL,
 	}
 	

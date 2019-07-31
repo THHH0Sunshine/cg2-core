@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import sunshine.cg2.core.game.Game.Msg;
-import sunshine.cg2.core.game.event.NormalLosingEvent;
 import sunshine.cg2.core.game.event.globalevent.AfterTurnEndEvent;
 import sunshine.cg2.core.game.event.globalevent.EnterTableEvent;
 import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
@@ -29,35 +28,6 @@ public class Player {
 	private final ArrayList<Card> hand;
 	private final ArrayList<Card> deck;
 	
-	private void breakWeapon(Card weapon)
-	{
-		weapon.kill();
-		game.broadcast(Game.Msg.BREAKWEAPON,new JSONObject(new Object[][]{{"who",index}}),-1);
-	}
-	
-	private void changeHero(Card card)
-	{
-		game.triggerEvent(new LeaveTableEvent(hero,LeaveTableEvent.Reason.CHANGEHERO));
-		game.removeCardFromTable(hero);
-		if(skill!=null)
-		{
-			game.triggerEvent(new LeaveTableEvent(hero,LeaveTableEvent.Reason.MOVE));
-			game.removeCardFromTable(skill);
-		}
-		card.replaceOldHero(hero);
-		hero=card;
-		game.addCardToTable(card,Card.Position.HERO,this);
-		if(card.info.skill==null)skill=null;
-		else
-		{
-			skill=game.createCard(card.info.skill,-1);
-			game.addCardToTable(skill,Card.Position.SKILL,this);
-		}
-		game.broadcast(Game.Msg.CHANGEHERO,new JSONObject(new Object[][]{{"who",index},{"card",card.getFullObject()}}),-1);
-		game.triggerEvent(new EnterTableEvent(hero));
-		if(skill!=null)game.triggerEvent(new EnterTableEvent(skill));
-	}
-	
 	private Card draw()
 	{
 		if(deck.isEmpty())return null;
@@ -69,6 +39,7 @@ public class Player {
 	private void equip(Card card)
 	{
 		Card old=weapon;
+		if(old!=null)old.kill();
 		weapon=card;
 		game.addCardToTable(card,Card.Position.EQUIP,this);
 		game.broadcast(Game.Msg.EQUIP,new JSONObject(new Object[][]{{"who",index},{"card",card.getFullObject()}}),-1);
@@ -78,7 +49,6 @@ public class Player {
 			if(batk!=aatk)hero.pp(aatk-batk,0,false);
 		}
 		game.triggerEvent(new EnterTableEvent(card));
-		if(old!=null)breakWeapon(old);
 	}
 	
 	private void pdmg()
@@ -127,13 +97,13 @@ public class Player {
 		game.triggerEvent(new EnterTableEvent(minion));
 	}
 	
-	/*private void useHeroPower(int choi,Card target) throws GameOverThrowable
+	private void useHeroPower(int choi,Card target) throws GameOverThrowable
 	{
 		spendCoins(skill.getCost());
 		skill.incWind();
 		skill.info.doBattlecry(skill,this,target,choi);
 		game.checkForDeath(true);
-	}*/
+	}
 	
 	Player(Game game,int index,String hero,String[] cardSet)
 	{
@@ -163,6 +133,7 @@ public class Player {
 		fillCoins(maxCoins);
 		if(weapon!=null&&weapon.getAtk()>0)hero.pp(weapon.getAtk(),0,false);
 		hero.resetWind();
+		for(Card c:field)if(c.positionIsMinionOrHero())c.resetWind();
 		if(skill!=null)skill.resetWind();
 		draw(rule.getDrawNum(pos,round));
 		game.checkForDeath(true);
@@ -242,8 +213,30 @@ public class Player {
 					}
 				}
 			}
-			//skillCan?
-			game.sendto(index,Game.Msg.CANPLAY,new JSONObject(new Object[][]{{"minioncan",minionCan},{"handcan",handCan}}));
+			JSONArray skillCan=null;
+			if(skill!=null&&skill.info.canPlay&&skill.getCost()<=coins&&skill.getSpeed()>0)
+			{
+				skillCan=new JSONArray(skill.info.choices);
+				for(int i=0;i<skill.info.choices;i++)
+				{
+					JSONArray toAdd=new JSONArray();
+					skillCan.add(toAdd);
+					if(skill.info.canTarget(skill,this,null,i))toAdd.add(null);
+					else
+					{
+						for(Player p:players)
+						{
+							if((p==this||!p.hero.hasKW(BuffInfo.KeyWord.STEALTH))&&!p.hero.hasKW(BuffInfo.KeyWord.MM)&&skill.info.canTarget(skill,this,p.hero,i))toAdd.add(new JSONObject(new Object[][]{{"pIndex",p.index},{"mIndex",-1}}));
+							for(int n=0;n<p.field.size();n++)
+							{
+								Card c=p.field.get(n);
+								if(c.positionIsMinionOrHero()&&(p==this||!c.hasKW(BuffInfo.KeyWord.STEALTH))&&!c.hasKW(BuffInfo.KeyWord.MM)&&skill.info.canTarget(skill,this,c,i))toAdd.add(new JSONObject(new Object[][]{{"pIndex",p.index},{"mIndex",n}}));
+							}
+						}
+					}
+				}
+			}
+			game.sendto(index,Game.Msg.CANPLAY,new JSONObject(new Object[][]{{"minioncan",minionCan},{"handcan",handCan},{"skillcan",skillCan}}));
 			byte[] reply=game.recvfrom(index);
 			Card target;
 			boolean f;
@@ -302,7 +295,7 @@ public class Player {
 				f=true;
 				for(Object o:(JSONArray)((JSONArray)handCan.get(reply[1])).get(reply[3]))
 				{
-					if(o==null&&reply[4]<0)
+					if(o==null&&target==null)
 					{
 						f=false;
 						break;
@@ -317,12 +310,35 @@ public class Player {
 				if(f)leave(false);
 				playHand(reply[1],reply[2],reply[3],target);
 				break;
-			/*case USESKILL:
-				if(skill==null)leave(false);
-				target=game.findChar(reply[2],reply[3]);
-				if(!canUseHeroPower(reply[1],target))leave(false);
+			case USESKILL:
+				if(skillCan==null||reply.length<4)leave(false);
+				if(reply[2]<0||reply[2]>game.getPlayerCount())target=null;
+				else
+				{
+					Player tarpp=game.getPlayer(reply[2]);
+					if(reply[3]>=tarpp.field.size())target=null;
+					target=reply[3]<0?tarpp.hero:tarpp.field.get(reply[3]);
+					if(!target.positionIsMinionOrHero())target=null;
+				}
+				if(reply[1]<0||reply[1]>=skill.info.choices)leave(false);
+				f=true;
+				for(Object o:(JSONArray)skillCan.get(reply[1]))
+				{
+					if(o==null&&target==null)
+					{
+						f=false;
+						break;
+					}
+					JSONObject jo=(JSONObject)o;
+					if((Integer)jo.get("pIndex")==reply[2]&&(Integer)jo.get("mIndex")==reply[3])
+					{
+						f=false;
+						break;
+					}
+				}
+				if(f)leave(false);
 				useHeroPower(reply[1],target);
-				break;*/
+				break;
 			default:
 				leave(false);
 			}
@@ -334,7 +350,7 @@ public class Player {
 		{
 			Card c=i<0?hero:field.get(i);
 			if(!c.positionIsMinionOrHero())continue;
-			if(c.isWindNotFull())
+			if(c.shouldBreakIce())
 			{
 				for(Buff b:c.getAllBuffs())
 				{
@@ -343,15 +359,12 @@ public class Player {
 					{
 						if(kw.equals(BuffInfo.KeyWord.FROZEN))
 						{
-							NormalLosingEvent e=new NormalLosingEvent();
-							b.triggerSelf(e);
-							if(!e.prevent)c.loseBuff(b);
+							c.loseBuff(b);
 							break;
 						}
 					}
 				}
 			}
-			c.resetWind();
 		}
 	}
 	
@@ -370,6 +383,7 @@ public class Player {
 			deck.add(card);
 		}
 		game.broadcast(Game.Msg.CHECKHERO,new JSONObject(new Object[][]{{"who",index},{"card",hero.getFullObject()}}),-1);
+		if(skill!=null)game.broadcast(Game.Msg.CHECKSKILL,new JSONObject(new Object[][]{{"who",index},{"card",skill.getDisplayObject()}}),-1);
 		game.broadcast(Game.Msg.CHECKCOINS,new JSONObject(new Object[][]{{"who",index},{"num",_coins}}),-1);
 		game.broadcast(Game.Msg.CHECKDECK,new JSONObject(new Object[][]{{"who",index},{"num",_deck.length}}),-1);
 		int fc=rule.getFirstCards(pos,players.length);
@@ -388,7 +402,7 @@ public class Player {
 	
 	GameOverThrowable prepareFirst(byte[] reply)
 	{
-		Player players[]=game.getAllPlayers();
+		Player[] players=game.getAllPlayers();
 		Rule rule=game.getRule();
 		int pos=game.getPos(index);
 		String[] _deck=rule.getDeck(cardSet,pos);
@@ -441,6 +455,39 @@ public class Player {
 		if(deck.isEmpty())return;
 		Card c=deck.remove(0);
 		game.broadcast(Game.Msg.BURN,new JSONObject(new Object[][]{{"who",index},{"card",c.getDisplayObject()}}),-1);
+	}
+	
+	public void changeHero(Card card)
+	{
+		game.triggerEvent(new LeaveTableEvent(hero,LeaveTableEvent.Reason.CHANGEHERO));
+		game.removeCardFromTable(hero);
+		card.replaceOldHero(hero);
+		hero=card;
+		game.addCardToTable(card,Card.Position.HERO,this);
+		game.broadcast(Game.Msg.CHANGEHERO,new JSONObject(new Object[][]{{"who",index},{"card",card.getFullObject()}}),-1);
+		game.triggerEvent(new EnterTableEvent(card));
+		if(card.info.skill!=null)changeSkill(card.info.skill);
+	}
+	
+	public void changeSkill(CardInfo ci)
+	{
+		if(skill!=null)
+		{
+			game.triggerEvent(new LeaveTableEvent(skill,LeaveTableEvent.Reason.MOVE));
+			game.removeCardFromTable(skill);
+		}
+		if(ci==null)
+		{
+			skill=null;
+			game.broadcast(Game.Msg.CHANGESKILL,new JSONObject(new Object[][]{{"who",index},{"card",null}}),-1);
+		}
+		else
+		{
+			skill=game.createCard(ci,-1);
+			game.addCardToTable(skill,Card.Position.SKILL,this);
+			game.broadcast(Game.Msg.CHANGESKILL,new JSONObject(new Object[][]{{"who",index},{"card",skill.getDisplayObject()}}),-1);
+			game.triggerEvent(new EnterTableEvent(skill));
+		}
 	}
 	
 	public void damageWeapon()
@@ -536,6 +583,19 @@ public class Player {
 		return rt;
 	}
 	
+	public Player getNextPlayer(int num)
+	{
+		int pc=game.getPlayerCount();
+		int rt=(index+num)%pc;
+		if(rt<0)rt+=pc;
+		return game.getPlayer(rt);
+	}
+	
+	public Player getNextPlayer()
+	{
+		return getNextPlayer(1);
+	}
+	
 	public void loseEmptyCoins(int num)
 	{
 		if(num<=0)return;
@@ -614,8 +674,9 @@ public class Player {
 	{
 		if(weapon==null)return;
 		Card old=weapon;
+		old.kill();
 		weapon=null;
+		game.broadcast(Game.Msg.THROWWEAPON,new JSONObject(new Object[][]{{"who",index}}),-1);
 		if(game.getCurrentPlayer()==this&&old.getAtk()>0)hero.pp(-old.getAtk(),0,false);
-		breakWeapon(old);
 	}
 }

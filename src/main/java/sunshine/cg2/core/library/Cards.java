@@ -308,7 +308,20 @@ public class Cards {
 	{
 		DEFAULT_LIBRARY=new HashMap<String,CardInfo>();
 		CardCreator cc=new CardCreator("hs.basic");
-		register(cc.name("hdruid").hide().clz(Clz.DRUID).type(Type.HERO).cannotPlay().HP(30).create()); //? skill
+		CardInfo ci;
+		ci=cc.name("hpdruid").hide().clz(Clz.DRUID).type(Type.SKILL).cost(2)
+			.function(new CardInfoAdapter()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					Card hero=player.getHero();
+					player.gainArmor(1);
+					hero.gainBuff(new ThisTurnPPBuffInfo(null,null,1,0),"",null);
+				}
+			}).create();
+		register(ci);
+		register(cc.name("hdruid").hide().clz(Clz.DRUID).type(Type.HERO).cannotPlay().HP(30)
+			.skill(ci).create());
 		register(cc.name("yhs").clz(Clz.DRUID).type(Type.SPELL).function(new DamageSpellCard(1)).create());
 		register(cc.name("jh").clz(Clz.DRUID).type(Type.SPELL)
 			.function(new CardInfoAdapter()
@@ -325,7 +338,7 @@ public class Cards {
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					Card hero=player.getHero();
-					player.gainArmor(3);
+					player.gainArmor(2);
 					hero.gainBuff(new ThisTurnPPBuffInfo(null,null,2,0),"",null);
 				}
 			}).create());
@@ -401,7 +414,16 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("albkbhz").clz(Clz.DRUID).type(Type.MINION).stature(8,8,8).buffs(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)).create());
-		register(cc.name("hhunter").hide().clz(Clz.HUNTER).type(Type.HERO).cannotPlay().HP(30).create()); //? skill
+		ci=cc.name("hphunter").hide().clz(Clz.HUNTER).type(Type.SKILL).cost(2)
+			.function(new CardInfoAdapter()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.getNextPlayer().getHero().takeDamage(card,2);
+				}
+			}).create();
+		register(ci);
+		register(cc.name("hhunter").hide().clz(Clz.HUNTER).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 		register(cc.name("assj").clz(Clz.HUNTER).type(Type.SPELL).cost(1).function(new DamageSpellCard(2)).create());
 		register(cc.name("sll").clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(1,1,1)
 			.buffs(new MyOtherMinionBuffInfo(null,new PPEffectBuffInfo(null,1,0),"hs.basic:sll")
@@ -473,13 +495,11 @@ public class Cards {
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
-					Game game=player.getGame();
-					return target==null&&game.getPlayer((player.getIndex()+1)%game.getPlayerCount()).getMinionNum()<2;
+					return target==null&&player.getNextPlayer().getMinionNum()<2;
 				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
-					Game game=player.getGame();
-					List<Card> minions=game.getPlayer((player.getIndex()+1)%game.getPlayerCount()).getAllMinions();
+					List<Card> minions=player.getNextPlayer().getAllMinions();
 					int len=minions.size();
 					if(len>2)len=2;
 					for(;len>0;len--)minions.remove((int)(Math.random()*len)).takeDamage(card,3);
