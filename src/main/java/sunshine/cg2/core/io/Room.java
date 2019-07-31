@@ -22,7 +22,7 @@ public class Room implements IO {
 			String[] d=new String[20];
 			for(int i=0;i<d.length/2;i++)d[i]="hs.basic:dwhb";
 			for(int i=d.length/2;i<d.length;i++)d[i]="hs.basic:jedtj";
-			for(int i=0;i<ds.length;i++)ds[i]=new CardSet("~hs.basic:hdruid",d);
+			for(int i=0;i<ds.length;i++)ds[i]=new CardSet("~hs.basic:hmage",d);
 			Game g=new Game(Cards.DEFAULT_LIBRARY,new String[]{"hs.basic"},Rules.HEARTHSTONE,ds,Room.this);
 			g.run();
 			for(Client c:clients)c.send("{stop:true}");

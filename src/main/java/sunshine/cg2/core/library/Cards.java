@@ -545,6 +545,8 @@ public class Cards {
 						player.draw(1);
 				}
 			}).create());
-		register(cc.name("hmage").hide().clz(Clz.MAGE).type(Type.HERO).cannotPlay().HP(30).create()); //? skill
+		ci=cc.name("hpmage").hide().clz(Clz.MAGE).type(Type.SKILL).cost(2).function(new DamageSpellCard(1)).create();
+		register(ci);
+		register(cc.name("hmage").hide().clz(Clz.MAGE).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 	}
 }
