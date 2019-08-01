@@ -248,11 +248,11 @@ public class Cards {
 		}
 	}
 	
-	public static class DamageSpellCard extends CardInfoAdapter
+	public static class DamageCard extends CardInfoAdapter
 	{
 		private int damage;
 		
-		public DamageSpellCard(int damage)
+		public DamageCard(int damage)
 		{
 			this.damage=damage;
 		}
@@ -281,12 +281,16 @@ public class Cards {
 	
 	/*
 	hs.basic:albkbhz
+	hs.basic:asfd
 	hs.basic:assj
 	hs.basic:dcsj
 	hs.basic:dwhb
+	hs.basic:hbj
 	hs.basic:hs
 	hs.basic:jh
+	hs.basic:jx
 	hs.basic:lryj
+	hs.basic:mbs
 	hs.basic:sll
 	hs.basic:slml
 	hs.basic:xhs
@@ -299,7 +303,14 @@ public class Cards {
 	hs.basic:zlzc
 	hs.basic:zzs
 	~hs.basic:flgs
+	~hs.basic:hdruid
+	~hs.basic:hhunter
+	~hs.basic:hmage
+	~hs.basic:hpdruid
+	~hs.basic:hphunter
+	~hs.basic:hpmage
 	~hs.basic:hf
+	~hs.basic:jx
 	~hs.basic:lok
 	~hs.basic:ms
 	*/
@@ -314,15 +325,14 @@ public class Cards {
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
-					Card hero=player.getHero();
 					player.gainArmor(1);
-					hero.gainBuff(new ThisTurnPPBuffInfo(null,null,1,0),"",null);
+					player.getHero().gainBuff(new ThisTurnPPBuffInfo(null,null,1,0),"",null);
 				}
 			}).create();
 		register(ci);
 		register(cc.name("hdruid").hide().clz(Clz.DRUID).type(Type.HERO).cannotPlay().HP(30)
 			.skill(ci).create());
-		register(cc.name("yhs").clz(Clz.DRUID).type(Type.SPELL).function(new DamageSpellCard(1)).create());
+		register(cc.name("yhs").clz(Clz.DRUID).type(Type.SPELL).function(new DamageCard(1)).create());
 		register(cc.name("jh").clz(Clz.DRUID).type(Type.SPELL)
 			.function(new CardInfoAdapter()
 			{
@@ -337,9 +347,8 @@ public class Cards {
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
-					Card hero=player.getHero();
 					player.gainArmor(2);
-					hero.gainBuff(new ThisTurnPPBuffInfo(null,null,2,0),"",null);
+					player.getHero().gainBuff(new ThisTurnPPBuffInfo(null,null,2,0),"",null);
 				}
 			}).create());
 		register(cc.name("yxyj").clz(Clz.DRUID).type(Type.SPELL).cost(2)
@@ -388,24 +397,26 @@ public class Cards {
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
-					Card hero=player.getHero();
 					BuffInfo bi = new ThisTurnPPBuffInfo(null,null,2,0);
-					hero.gainBuff(bi,"",null);
+					player.getHero().gainBuff(bi,"",null);
 					for(Card c:player.getField())if(c.positionIsMinionOrHero())c.gainBuff(bi,"hs.basic:ympx",null);
 				}
 			}).create());
 		register(cc.name("hs").clz(Clz.DRUID).type(Type.SPELL).cost(4)
-			.function(new DamageSpellCard(4)
+			.function(new DamageCard(4)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					Player tarp=target.getOwner();
 					super.doBattlecry(card,player,target,choi);
-					player.getGame().forEachCardOnTable(c->{if(c!=target&&c.getOwner()==tarp&&c.positionIsMinionOrHero())c.takeDamage(card,1);});
+					tarp.getHero().takeDamageWithoutCheck(card,1);
+					List<Card> minions=tarp.getAllMinions();
+					for (Card c:minions)if(c!=target)c.takeDamageWithoutCheck(card,1);
+					player.getGame().checkForDamage();
 				}
 			}).create());
 		register(cc.name("xhs").clz(Clz.DRUID).type(Type.SPELL).cost(6)
-			.function(new DamageSpellCard(5)
+			.function(new DamageCard(5)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -424,7 +435,7 @@ public class Cards {
 			}).create();
 		register(ci);
 		register(cc.name("hhunter").hide().clz(Clz.HUNTER).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
-		register(cc.name("assj").clz(Clz.HUNTER).type(Type.SPELL).cost(1).function(new DamageSpellCard(2)).create());
+		register(cc.name("assj").clz(Clz.HUNTER).type(Type.SPELL).cost(1).function(new DamageCard(2)).create());
 		register(cc.name("sll").clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(1,1,1)
 			.buffs(new MyOtherMinionBuffInfo(null,new PPEffectBuffInfo(null,1,0),"hs.basic:sll")
 			{
@@ -468,16 +479,15 @@ public class Cards {
 				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
 				{
-					Game game=player.getGame();
 					int who=(int)(Math.random()*3);
-					player.summon(game.createCard(choices[who],-1));
+					player.summon(player.getGame().createCard(choices[who],-1));
 				}
 			}).create());
 		register(cc.name("hf").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,4,2).buffs(new BuffInfo(new KeyWord[]{KeyWord.CHARGE},null,false)).create());
 		register(cc.name("ms").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,4,4).buffs(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)).create());
 		register(cc.name("lok").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,2,4).buffs(new MyOtherMinionBuffInfo(null,new PPEffectBuffInfo(null,1,0),"~hs.basic:lok")).create());
 		register(cc.name("slml").clz(Clz.HUNTER).type(Type.SPELL).cost(3)
-			.function(new DamageSpellCard(3)
+			.function(new DamageCard(3)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -500,9 +510,8 @@ public class Cards {
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					List<Card> minions=player.getNextPlayer().getAllMinions();
-					int len=minions.size();
-					if(len>2)len=2;
-					for(;len>0;len--)minions.remove((int)(Math.random()*len)).takeDamage(card,3);
+					if(minions.size()>=2)for(int len=2;len>0;len--)minions.remove((int)(Math.random()*len)).takeDamageWithoutCheck(card,3);
+					player.getGame().checkForDamage();
 				}
 			}).create());
 		register(cc.name("xss").clz(Clz.HUNTER).type(Type.MINION).stature(4,4,3)
@@ -545,8 +554,65 @@ public class Cards {
 						player.draw(1);
 				}
 			}).create());
-		ci=cc.name("hpmage").hide().clz(Clz.MAGE).type(Type.SKILL).cost(2).function(new DamageSpellCard(1)).create();
+		ci=cc.name("hpmage").hide().clz(Clz.MAGE).type(Type.SKILL).cost(2).function(new DamageCard(1)).create();
 		register(ci);
 		register(cc.name("hmage").hide().clz(Clz.MAGE).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
+		register(cc.name("asfd").clz(Clz.MAGE).type(Type.SPELL).cost(1)
+			.function(new CardInfoAdapter()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					Player next=player.getNextPlayer();
+					for(int i=0;i<3;i++)
+					{
+						List<Card> chars=next.getAliveMinions();
+						if(!next.getHero().isDying())chars.add(next.getHero());
+						int len=chars.size();
+						if(len<=0)break;
+						int who=(int)(Math.random()*len);
+						chars.get(who).takeDamage(card,1);
+					}
+				}
+			}).create());
+		register(cc.name("jx").clz(Clz.MAGE).type(Type.SPELL).cost(1)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return player.getFieldNum()+2<=player.getGame().getRule().maxField;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
+				{
+					Game game=player.getGame();
+					for(int i=0;i<2;i++)player.summon(game.createCard("~hs.basic:jx",-1));
+				}
+			}).create());
+		register(cc.name("jx").hide().clz(Clz.MAGE).type(Type.MINION).stature(1,0,2).buffs(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)).create());
+		register(cc.name("hbj").clz(Clz.MAGE).type(Type.SPELL).cost(2)
+			.function(new DamageCard(3)
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					super.doBattlecry(card,player,target,choi);
+					target.freeze();
+				}
+			}).create());
+		register(cc.name("mbs").clz(Clz.MAGE).type(Type.SPELL).cost(2)
+			.function(new CardInfoAdapter()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.getNextPlayer().getAllMinions().forEach(c->c.takeDamageWithoutCheck(card,1));
+					player.getGame().checkForDamage();
+				}
+			}).create());
+		register(cc.name("bsxx").clz(Clz.MAGE).type(Type.SPELL).cost(3)
+			.function(new CardInfoAdapter()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.getNextPlayer().getAllMinions().forEach(c->c.freeze());
+				}
+			}).create());
 	}
 }

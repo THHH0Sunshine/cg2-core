@@ -82,20 +82,23 @@ public class Player {
 		}
 		card.info.doBattlecry(card,this,target,choi);
 		game.checkForDeath(true);
-		if(card.info.type==CardInfo.Type.MINION&&card.getPosition()==Card.Position.MINION&&game.isCardOnTable(card))
+		if(card.info.type==CardInfo.Type.MINION&&card.getPosition()==Card.Position.MINION)
+		{
 			game.triggerEvent(new SummonEvent(card));
-		game.checkForDeath(true);
+			game.checkForDeath(true);
+		}
 	}
 	
-	private void summon0(Card minion,int posi)
+	private boolean summon0(Card minion,int posi)
 	{
 		int n=getFieldNum();
-		if(n>=game.getRule().maxField)return;
+		if(n>=game.getRule().maxField)return false;
 		if(posi>n)posi=n;
 		field.add(posi,minion);
 		game.addCardToTable(minion,Card.Position.MINION,this);
 		game.broadcast(Game.Msg.SUMMON,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi},{"card",minion.getFullObject()}}),-1);
 		game.triggerEvent(new EnterTableEvent(minion));
+		return true;
 	}
 	
 	private void useHeroPower(int choi,Card target) throws GameOverThrowable
@@ -546,6 +549,13 @@ public class Player {
 		return true;
 	}
 	
+	public List<Card> getAliveMinions()
+	{
+		ArrayList<Card> rt=new ArrayList<>(field.size());
+		for(Card c:field)if(c.getPosition()==Card.Position.MINION&&!c.isDying())rt.add(c);
+		return rt;
+	}
+	
 	public List<Card> getAllMinions()
 	{
 		ArrayList<Card> rt=new ArrayList<>(field.size());
@@ -667,7 +677,7 @@ public class Player {
 	
 	public void summon(Card minion,int posi) throws GameOverThrowable
 	{
-		summon0(minion,posi);
+		if(!summon0(minion,posi))return;
 		game.triggerEvent(new SummonEvent(minion));
 		game.checkForDeath(true);
 	}

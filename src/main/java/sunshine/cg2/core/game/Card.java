@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import sunshine.cg2.core.game.BuffInfo.KeyWord;
 import sunshine.cg2.core.game.event.GainBuffEvent;
 import sunshine.cg2.core.game.event.LoseBuffEvent;
 import sunshine.cg2.core.game.event.globalevent.GlobalEvent;
@@ -15,7 +16,7 @@ public class Card {
 
 	public enum Position
 	{
-		NONE,
+		OFFTABLE,
 		HERO,
 		SKILL,
 		MINION,
@@ -42,7 +43,7 @@ public class Card {
 	private final LinkedList<Buff> buffs=new LinkedList<>();
 	private Player owner;
 	private int number;
-	private Position position=Position.NONE;
+	private Position position=Position.OFFTABLE;
 	public final CardInfo info;
 	public final int from;
 	public final HashMap<String,Object> tags = new HashMap<>();
@@ -103,27 +104,6 @@ public class Card {
 		wind++;
 	}
 	
-	void replaceOldHero(Card old)
-	{
-		if(info.HP<=0)
-		{
-			maxHP=old.maxHP;
-			HP=old.HP;
-		}
-		atk=old.atk;
-		armor=old.armor;
-		wind=old.wind;
-		for(Buff b:old.buffs)buffs.add(b);
-		tags.putAll(old.tags);
-	}
-	
-	void resetWind()
-	{
-		sleeping=false;
-		forceGreen=false;
-		wind=0;
-	}
-	
 	void initOnTable(Position position,Player owner,int number)
 	{
 		this.position=position;
@@ -138,8 +118,35 @@ public class Card {
 		}
 	}
 	
+	void replaceOldHero(Card old)
+	{
+		if(info.HP<=0)
+		{
+			maxHP=old.maxHP;
+			HP=old.HP;
+		}
+		atk=old.atk;
+		armor=old.armor;
+		wind=old.wind;
+		for(Buff b:old.buffs)buffs.add(b);
+		tags.putAll(old.tags);
+	}
+	
+	void resetPosition()
+	{
+		position=Position.OFFTABLE;
+	}
+	
+	void resetWind()
+	{
+		sleeping=false;
+		forceGreen=false;
+		wind=0;
+	}
+	
 	public void attack(Card target)
 	{
+		if(!positionIsMinionOrHero()||!target.positionIsMinionOrHero())return;
 		for(Buff b:buffs)
 		{
 			if(b.info.keyWords==null||b.info.isEffect)continue;
@@ -157,8 +164,9 @@ public class Card {
 		boolean f = this.number < target.number;
 		Card finj = f ? this : target;
 		Card sinj = f ? target : this;
-		finj.takeDamage(sinj,sinj.atk);
-		sinj.takeDamage(finj,finj.atk);
+		finj.takeDamageWithoutCheck(sinj,sinj.atk);
+		sinj.takeDamageWithoutCheck(finj,finj.atk);
+		game.checkForDamage();
 		if(position==Position.HERO)owner.damageWeapon();
 	}
 	
@@ -167,8 +175,14 @@ public class Card {
 		forceGreen=true;
 	}
 	
+	public void freeze()
+	{
+		gainBuff(new BuffInfo(new KeyWord[]{KeyWord.FROZEN},null,false),"",null);
+	}
+	
 	public void gainBuff(BuffInfo buffInfo,String name,Buff effectSource)
 	{
+		if(position==Position.OFFTABLE)return;
 		Buff buff = new Buff(buffInfo,name,this,effectSource);
 		buffs.add(buff);
 		if(buffInfo.events!=null)game.registerEvents(buff,GlobalEvent.class);
@@ -263,7 +277,7 @@ public class Card {
 	
 	public boolean isDying()
 	{
-		return dying;
+		return HP<=0||dying;
 	}
 	
 	public void kill()
@@ -273,6 +287,7 @@ public class Card {
 	
 	public void loseBuff(Buff buff)
 	{
+		if(position==Position.OFFTABLE)return;
 		int ind=buffs.indexOf(buff);
 		if(ind<0)return;
 		buff.triggerSelf(new LoseBuffEvent());
@@ -302,17 +317,13 @@ public class Card {
 		}
 		maxHP+=HP;
 		if(HP>0)this.HP+=HP;
-		if(this.HP>maxHP)
-		{
-			this.HP=maxHP;
-			if(this.HP<=0)dying=true;
-		}
-		game.broadcast(Game.Msg.CHANGEPP,new JSONObject(new Object[][]{{"hash",hashCode()},{"atk",getAtk()},{"maxhp",maxHP},{"hp",this.HP}}),-1);
+		if(this.HP>maxHP)this.HP=maxHP;
+		if(position!=Position.OFFTABLE)game.broadcast(Game.Msg.CHANGEPP,new JSONObject(new Object[][]{{"hash",hashCode()},{"atk",getAtk()},{"maxhp",maxHP},{"hp",this.HP}}),-1);
 	}
 	
 	public void restoreHealth(Card from,int count)
 	{
-		if(HP>=maxHP)return;
+		if(position==Position.OFFTABLE||HP>=maxHP)return;
 		int c=maxHP-HP;
 		if(count<c)c=count;
 		HP+=count;
@@ -361,6 +372,7 @@ public class Card {
 	
 	public void silence()
 	{
+		if(position==Position.OFFTABLE)return;
 		Iterator<Buff> it = buffs.iterator();
 		while (it.hasNext())
 		{
@@ -372,6 +384,14 @@ public class Card {
 	
 	public void takeDamage(Card from,int damage)
 	{
+		if(position==Position.OFFTABLE)return;
+		takeDamageWithoutCheck(from,damage);
+		game.checkForDamage();
+	}
+	
+	public void takeDamageWithoutCheck(Card from,int damage)
+	{
+		if(position==Position.OFFTABLE)return;
 		if(shield)
 		{
 			shield=false;
@@ -383,9 +403,9 @@ public class Card {
 			else
 			{
 				HP-=damage-armor;
-				if(HP<=0)dying=true;
 				armor=0;
 			}
+			//...
 			JSONObject toSend=new JSONObject(new Object[][]{{"tohash",hashCode()},{"num",damage}});
 			if(from!=null)toSend.put("fromhash",from.hashCode());
 			game.broadcast(Game.Msg.DAMAGE,toSend,-1);

@@ -101,6 +101,7 @@ public class Game {
 	{
 		for(Buff b:card.getAllBuffs())unregisterEvents(b);
 		table.remove(card);
+		card.resetPosition();
 	}
 	
 	void broadcast(Msg msg,JSONObject jsonobj,int except)
@@ -159,6 +160,11 @@ public class Game {
 		{
 			players[i]=new Player(this,i,sets[i].hero,sets[i].cards.clone());
 		}
+	}
+	
+	public void checkForDamage()
+	{
+		//...
 	}
 	
 	public int checkForDeath(boolean completely) throws GameOverThrowable
@@ -262,11 +268,6 @@ public class Game {
 	public String[] getUsingPrefix()
 	{
 		return usingPrefix.clone();
-	}
-	
-	public boolean isCardOnTable(Card card)
-	{
-		return table.contains(card);
 	}
 	
 	public void registerEvents(Buff buff,Class<? extends Event> select)
