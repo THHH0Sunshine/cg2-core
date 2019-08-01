@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import sunshine.cg2.core.game.BuffInfo.KeyWord;
 import sunshine.cg2.core.game.event.GainBuffEvent;
 import sunshine.cg2.core.game.event.LoseBuffEvent;
+import sunshine.cg2.core.game.event.globalevent.DamagedEvent;
 import sunshine.cg2.core.game.event.globalevent.GlobalEvent;
 import sunshine.cg2.core.util.JSONArray;
 import sunshine.cg2.core.util.JSONObject;
@@ -44,6 +45,7 @@ public class Card {
 	private Player owner;
 	private int number;
 	private Position position=Position.OFFTABLE;
+	private DamagedEvent damagedEvent;
 	public final CardInfo info;
 	public final int from;
 	public final HashMap<String,Object> tags = new HashMap<>();
@@ -177,6 +179,7 @@ public class Card {
 	
 	public void freeze()
 	{
+		if(!positionIsMinionOrHero())return;
 		gainBuff(new BuffInfo(new KeyWord[]{KeyWord.FROZEN},null,false),"",null);
 	}
 	
@@ -321,6 +324,13 @@ public class Card {
 		if(position!=Position.OFFTABLE)game.broadcast(Game.Msg.CHANGEPP,new JSONObject(new Object[][]{{"hash",hashCode()},{"atk",getAtk()},{"maxhp",maxHP},{"hp",this.HP}}),-1);
 	}
 	
+	public DamagedEvent removeDamagedEvent()
+	{
+		DamagedEvent rt=damagedEvent;
+		damagedEvent=null;
+		return rt;
+	}
+	
 	public void restoreHealth(Card from,int count)
 	{
 		if(position==Position.OFFTABLE||HP>=maxHP)return;
@@ -405,10 +415,16 @@ public class Card {
 				HP-=damage-armor;
 				armor=0;
 			}
-			//...
+			damagedEvent=new DamagedEvent(from,this,damage);
 			JSONObject toSend=new JSONObject(new Object[][]{{"tohash",hashCode()},{"num",damage}});
 			if(from!=null)toSend.put("fromhash",from.hashCode());
 			game.broadcast(Game.Msg.DAMAGE,toSend,-1);
 		}
+	}
+	
+	public void transformField(Card to,boolean ice)
+	{
+		if(position!=Position.MINION)return;
+		owner.transformField(this,to,ice);
 	}
 }

@@ -14,6 +14,7 @@ public class BuffInfo {
 		STEALTH,
 		TAUNT,
 		WINDFURY,
+		POISONOUS,
 		WOOD
 	}
 	

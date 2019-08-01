@@ -35,6 +35,7 @@ public class CardInfo {
 		BEAST,
 		DRAGON,
 		MURLOC,
+		ELEMENT,
 	}
 	
 	public final String name;

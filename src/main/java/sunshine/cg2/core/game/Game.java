@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import sunshine.cg2.core.game.event.DeathrattleEvent;
 import sunshine.cg2.core.game.event.Event;
+import sunshine.cg2.core.game.event.globalevent.DamagedEvent;
 import sunshine.cg2.core.game.event.globalevent.GlobalEvent;
 import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
 import sunshine.cg2.core.util.JSONObject;
@@ -164,7 +165,13 @@ public class Game {
 	
 	public void checkForDamage()
 	{
-		//...
+		ArrayList<DamagedEvent> damaged=new ArrayList<>();
+		for(Card c:table)
+		{
+			DamagedEvent e=c.removeDamagedEvent();
+			if(e!=null)damaged.add(e);
+		}
+		for(DamagedEvent e:damaged)triggerEvent(e);
 	}
 	
 	public int checkForDeath(boolean completely) throws GameOverThrowable
@@ -174,14 +181,14 @@ public class Game {
 		{
 			for(Player p:players)if(p.getHero().isDying())throw new GameOverThrowable(GameOverThrowable.Type.NORMAL);
 			ArrayList<Card> dying=new ArrayList<>();
-			table.forEach(c->{if(c.isDying())dying.add(c);});
+			for(Card c:table)if(c.isDying())dying.add(c);
 			if(dying.isEmpty())break;
 			for(Card c:dying)
 			{
 				switch(c.getPosition())
 				{
 				case MINION:
-					c.getOwner().removeMinion(c,LeaveTableEvent.Reason.DEATH);
+					c.getOwner().removeField(c,LeaveTableEvent.Reason.DEATH);
 					//players[c.getMinionOwnerId()].addDeath(c.info.id);
 					break;
 				default:

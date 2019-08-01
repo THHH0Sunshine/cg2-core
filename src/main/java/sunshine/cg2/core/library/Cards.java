@@ -1,6 +1,5 @@
 package sunshine.cg2.core.library;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +21,7 @@ import sunshine.cg2.core.game.event.Event;
 import sunshine.cg2.core.game.event.GainBuffEvent;
 import sunshine.cg2.core.game.event.LoseBuffEvent;
 import sunshine.cg2.core.game.event.globalevent.AfterTurnEndEvent;
+import sunshine.cg2.core.game.event.globalevent.DamagedEvent;
 import sunshine.cg2.core.game.event.globalevent.EnterTableEvent;
 import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
 import sunshine.cg2.core.game.event.globalevent.SummonEvent;
@@ -161,59 +161,26 @@ public class Cards {
 	
 	public static class ThisTurnBuffInfo extends BuffInfo
 	{
-		private static Object[] events(Object[] c)
+		public ThisTurnBuffInfo(KeyWord[] keyWords)
 		{
-			if(c==null)return new Object[]{AfterTurnEndEvent.class};
-			Object[] rt=Arrays.copyOf(c,c.length+1);
-			rt[c.length]=AfterTurnEndEvent.class;
-			return rt;
-		}
-		
-		public ThisTurnBuffInfo(KeyWord[] keyWords,Object[] extraEvents)
-		{
-			super(keyWords,events(extraEvents),false);
+			super(keyWords,new Object[]{AfterTurnEndEvent.class},false);
 		}
 		
 		@Override
 		public void onTrigger(Buff buff,Event event)
 		{
-			if(event instanceof AfterTurnEndEvent)buff.toBuff.loseBuff(buff);
-			else onExtraEvents(buff,event);
-		}
-		
-		public void onExtraEvents(Buff buff,Event event)
-		{
+			buff.toBuff.loseBuff(buff);
 		}
 	}
 	
 	public static class ThisTurnPPBuffInfo extends BuffInfo
 	{
-		private static Object[] events(Object[] c)
-		{
-			int l;
-			Object[] rt;
-			if(c==null)
-			{
-				l=0;
-				rt=new Object[3];
-			}
-			else
-			{
-				l=c.length;
-				rt=Arrays.copyOf(c,c.length+3);
-			}
-			rt[l]=AfterTurnEndEvent.class;
-			rt[l+1]=GainBuffEvent.class;
-			rt[l+2]=LoseBuffEvent.class;
-			return rt;
-		}
-		
 		private final int atk;
 		private final int HP;
 		
-		public ThisTurnPPBuffInfo(KeyWord[] keyWords,Object[] extraEvents,int atk,int HP)
+		public ThisTurnPPBuffInfo(KeyWord[] keyWords,int atk,int HP)
 		{
-			super(keyWords,events(extraEvents),false);
+			super(keyWords,new Object[]{AfterTurnEndEvent.class,GainBuffEvent.class,LoseBuffEvent.class},false);
 			this.atk = atk;
 			this.HP = HP;
 		}
@@ -223,12 +190,7 @@ public class Cards {
 		{
 			if(event instanceof AfterTurnEndEvent)buff.toBuff.loseBuff(buff);
 			else if(event instanceof GainBuffEvent)buff.toBuff.pp(atk,HP,false);
-			else if(event instanceof LoseBuffEvent)buff.toBuff.pp(-atk,-HP,false);
-			else onExtraEvents(buff,event);
-		}
-		
-		public void onExtraEvents(Buff buff,Event event)
-		{
+			else buff.toBuff.pp(-atk,-HP,false);
 		}
 	}
 	
@@ -245,6 +207,36 @@ public class Cards {
 		public void onTrigger(Buff buff,Event event)
 		{
 			buff.toBuff.getOwner().gainArmor(armor);
+		}
+	}
+	
+	public static class PoisonousBuffInfo extends BuffInfo
+	{
+		public PoisonousBuffInfo()
+		{
+			super(new KeyWord[]{KeyWord.POISONOUS},new Object[]{DamagedEvent.class},false);
+		}
+		
+		@Override
+		public void onTrigger(Buff buff,Event event)
+		{
+			DamagedEvent e=(DamagedEvent)event;
+			if(e.from==buff.toBuff)e.to.kill();
+		}
+	}
+	
+	public static class FreezingBuffInfo extends BuffInfo
+	{
+		public FreezingBuffInfo(KeyWord[] keyWords)
+		{
+			super(keyWords,new Object[]{DamagedEvent.class},false);
+		}
+		
+		@Override
+		public void onTrigger(Buff buff,Event event)
+		{
+			DamagedEvent e=(DamagedEvent)event;
+			if(e.from==buff.toBuff)e.to.freeze();
 		}
 	}
 	
@@ -283,16 +275,21 @@ public class Cards {
 	hs.basic:albkbhz
 	hs.basic:asfd
 	hs.basic:assj
+	hs.basic:aszh
+	hs.basic:bxs
 	hs.basic:dcsj
 	hs.basic:dwhb
 	hs.basic:hbj
+	hs.basic:hqs
 	hs.basic:hs
 	hs.basic:jh
 	hs.basic:jx
 	hs.basic:lryj
+	hs.basic:lyfb
 	hs.basic:mbs
 	hs.basic:sll
 	hs.basic:slml
+	hs.basic:sys
 	hs.basic:xhs
 	hs.basic:xss
 	hs.basic:yhs
@@ -312,6 +309,7 @@ public class Cards {
 	~hs.basic:hf
 	~hs.basic:jx
 	~hs.basic:lok
+	~hs.basic:my
 	~hs.basic:ms
 	*/
 	public static final Map<String,CardInfo> DEFAULT_LIBRARY;
@@ -326,7 +324,7 @@ public class Cards {
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					player.gainArmor(1);
-					player.getHero().gainBuff(new ThisTurnPPBuffInfo(null,null,1,0),"",null);
+					player.getHero().gainBuff(new ThisTurnPPBuffInfo(null,1,0),"",null);
 				}
 			}).create();
 		register(ci);
@@ -348,7 +346,7 @@ public class Cards {
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					player.gainArmor(2);
-					player.getHero().gainBuff(new ThisTurnPPBuffInfo(null,null,2,0),"",null);
+					player.getHero().gainBuff(new ThisTurnPPBuffInfo(null,2,0),"",null);
 				}
 			}).create());
 		register(cc.name("yxyj").clz(Clz.DRUID).type(Type.SPELL).cost(2)
@@ -397,7 +395,7 @@ public class Cards {
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
-					BuffInfo bi = new ThisTurnPPBuffInfo(null,null,2,0);
+					BuffInfo bi = new ThisTurnPPBuffInfo(null,2,0);
 					player.getHero().gainBuff(bi,"",null);
 					for(Card c:player.getField())if(c.positionIsMinionOrHero())c.gainBuff(bi,"hs.basic:ympx",null);
 				}
@@ -475,7 +473,7 @@ public class Cards {
 				final String[] choices=new String[]{"~hs.basic:hf","~hs.basic:ms","~hs.basic:lok"};
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
-					return player.getFieldNum()<player.getGame().getRule().maxField;
+					return target==null&&player.getFieldNum()<player.getGame().getRule().maxField;
 				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
 				{
@@ -579,7 +577,7 @@ public class Cards {
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
-					return player.getFieldNum()+2<=player.getGame().getRule().maxField;
+					return target==null&&player.getFieldNum()+2<=player.getGame().getRule().maxField;
 				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
 				{
@@ -614,5 +612,38 @@ public class Cards {
 					player.getNextPlayer().getAllMinions().forEach(c->c.freeze());
 				}
 			}).create());
+		register(cc.name("aszh").clz(Clz.MAGE).type(Type.SPELL).cost(3)
+			.function(new CardInfoAdapter()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.draw(2);
+				}
+			}).create());
+		register(cc.name("bxs").clz(Clz.MAGE).type(Type.SPELL).cost(4)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target!=null&&target.getPosition()==Position.MINION;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					target.transformField(player.getGame().createCard("~hs.basic:my",-1),false);
+				}
+			}).create());
+		register(cc.name("my").hide().clz(Clz.NONE).type(Type.MINION).stature(1,1,1).create());
+		register(cc.name("sys").clz(Clz.MAGE).type(Type.MINION).races(Race.ELEMENT).stature(4,3,6)
+			.buffs(new FreezingBuffInfo(null)).create());
+		register(cc.name("hqs").clz(Clz.MAGE).type(Type.SPELL).cost(4).function(new DamageCard(6)).create());
+		register(cc.name("lyfb").clz(Clz.MAGE).type(Type.SPELL).cost(7)
+				.function(new CardInfoAdapter()
+				{
+					@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+					{
+						player.getNextPlayer().getAllMinions().forEach(c->c.takeDamageWithoutCheck(card,4));
+						player.getGame().checkForDamage();
+					}
+				}).create());
 	}
 }

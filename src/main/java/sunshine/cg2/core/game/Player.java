@@ -67,7 +67,7 @@ public class Player {
 		switch(card.info.type)
 		{
 		case MINION:
-			summon0(card,posi);
+			summon0(card,posi,Card.Position.MINION);
 			break;
 		case SPELL:
 			break;
@@ -89,16 +89,16 @@ public class Player {
 		}
 	}
 	
-	private boolean summon0(Card minion,int posi)
+	private boolean summon0(Card card,int posi,Card.Position position)
 	{
 		int n=getFieldNum();
 		if(n>=game.getRule().maxField)return false;
 		if(posi>n)posi=n;
-		field.add(posi,minion);
-		game.addCardToTable(minion,Card.Position.MINION,this);
-		game.broadcast(Game.Msg.SUMMON,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi},{"card",minion.getFullObject()}}),-1);
-		game.triggerEvent(new EnterTableEvent(minion));
-		return true;
+		field.add(posi,card);
+		game.addCardToTable(card,position,this);
+		game.broadcast(Game.Msg.SUMMON,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi},{"card",card.getFullObject()}}),-1);
+		game.triggerEvent(new EnterTableEvent(card));
+		return card.getPosition()==Card.Position.MINION;
 	}
 	
 	private void useHeroPower(int choi,Card target) throws GameOverThrowable
@@ -645,13 +645,13 @@ public class Player {
 		return rt;
 	}
 	
-	public void removeMinion(Card minion,LeaveTableEvent.Reason reason)
+	public void removeField(Card card,LeaveTableEvent.Reason reason)
 	{
-		int posi=field.indexOf(minion);
+		int posi=field.indexOf(card);
 		if(posi<0)return;
-		game.triggerEvent(new LeaveTableEvent(minion,reason));
+		game.triggerEvent(new LeaveTableEvent(card,reason));
 		field.remove(posi);
-		game.removeCardFromTable(minion);
+		game.removeCardFromTable(card);
 		game.broadcast(Game.Msg.REMOVEMINION,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi}}),-1);
 	}
 	
@@ -677,9 +677,7 @@ public class Player {
 	
 	public void summon(Card minion,int posi) throws GameOverThrowable
 	{
-		if(!summon0(minion,posi))return;
-		game.triggerEvent(new SummonEvent(minion));
-		game.checkForDeath(true);
+		if(summon0(minion,posi,Card.Position.MINION))game.triggerEvent(new SummonEvent(minion));
 	}
 	
 	public void summon(Card minion) throws GameOverThrowable
@@ -701,5 +699,13 @@ public class Player {
 		weapon=null;
 		game.broadcast(Game.Msg.THROWWEAPON,new JSONObject(new Object[][]{{"who",index}}),-1);
 		if(game.getCurrentPlayer()==this&&old.getAtk()>0)hero.pp(-old.getAtk(),0,false);
+	}
+	
+	public void transformField(Card from,Card to,boolean ice)
+	{
+		int posi=field.indexOf(from);
+		if(posi<0)return;
+		removeField(from,LeaveTableEvent.Reason.TRANSFORM);
+		summon0(to,posi,ice?Card.Position.ICE:Card.Position.MINION);
 	}
 }
