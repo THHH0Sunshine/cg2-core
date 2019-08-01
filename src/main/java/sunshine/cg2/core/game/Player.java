@@ -27,6 +27,7 @@ public class Player {
 	private final ArrayList<Card> field;
 	private final ArrayList<Card> hand;
 	private final ArrayList<Card> deck;
+	private boolean hasStaghelm;
 	
 	private Card draw()
 	{
@@ -191,12 +192,13 @@ public class Player {
 			for(int i=0;i<hand.size();i++)
 			{
 				Card c=hand.get(i);
-				JSONArray toAdd=new JSONArray(c.info.choices);
-				for(int j=0;j<c.info.choices;j++)toAdd.add(new JSONArray());
+				int choices=hasStaghelm?1:c.info.choices;
+				JSONArray toAdd=new JSONArray(choices);
+				for(int j=0;j<choices;j++)toAdd.add(new JSONArray());
 				handCan.add(toAdd);
 				if(!c.info.canPlay||c.getCost()>coins||c.info.type==CardInfo.Type.NONE)continue;
 				if(c.info.type==CardInfo.Type.MINION&&minionNum>=rule.maxField)continue;
-				for(int j=0;j<c.info.choices;j++)
+				for(int j=0;j<choices;j++)
 				{
 					if(c.info.canTarget(c,this,null,j))((JSONArray)toAdd.get(j)).add(null);
 					else
@@ -216,8 +218,9 @@ public class Player {
 			JSONArray skillCan=null;
 			if(skill!=null&&skill.info.canPlay&&skill.getCost()<=coins&&skill.getSpeed()>0)
 			{
-				skillCan=new JSONArray(skill.info.choices);
-				for(int i=0;i<skill.info.choices;i++)
+				int choices=hasStaghelm?1:skill.info.choices;
+				skillCan=new JSONArray(choices);
+				for(int i=0;i<choices;i++)
 				{
 					JSONArray toAdd=new JSONArray();
 					skillCan.add(toAdd);
@@ -291,7 +294,7 @@ public class Player {
 					reply[2]<0||
 					reply[2]>minionNum||
 					reply[3]<0||
-					reply[3]>=hand.get(reply[1]).info.choices)leave(false);
+					reply[3]>=(hasStaghelm?1:hand.get(reply[1]).info.choices))leave(false);
 				f=true;
 				for(Object o:(JSONArray)((JSONArray)handCan.get(reply[1])).get(reply[3]))
 				{
@@ -320,7 +323,7 @@ public class Player {
 					target=reply[3]<0?tarpp.hero:tarpp.field.get(reply[3]);
 					if(!target.positionIsMinionOrHero())target=null;
 				}
-				if(reply[1]<0||reply[1]>=skill.info.choices)leave(false);
+				if(reply[1]<0||reply[1]>=(hasStaghelm?1:skill.info.choices))leave(false);
 				f=true;
 				for(Object o:(JSONArray)skillCan.get(reply[1]))
 				{
@@ -596,6 +599,11 @@ public class Player {
 		return getNextPlayer(1);
 	}
 	
+	public boolean hasStaghelm()
+	{
+		return hasStaghelm;
+	}
+	
 	public void loseEmptyCoins(int num)
 	{
 		if(num<=0)return;
@@ -635,6 +643,11 @@ public class Player {
 		field.remove(posi);
 		game.removeCardFromTable(minion);
 		game.broadcast(Game.Msg.REMOVEMINION,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi}}),-1);
+	}
+	
+	public void setHasStaghelm(boolean f)
+	{
+		hasStaghelm=f;
 	}
 	
 	public void shuffle(Card card)

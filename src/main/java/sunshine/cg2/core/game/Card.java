@@ -75,7 +75,6 @@ public class Card {
 			{"hp",HP},
 			{"canplay",info.canPlay},
 			{"type",info.type.name()},
-			{"choices",info.choices},
 			{"handtags",info.getHandTags(this)}
 		});
 	}
