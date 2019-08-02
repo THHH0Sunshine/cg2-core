@@ -11,6 +11,7 @@ import sunshine.cg2.core.game.event.DeathrattleEvent;
 import sunshine.cg2.core.game.event.Event;
 import sunshine.cg2.core.game.event.globalevent.DamagedEvent;
 import sunshine.cg2.core.game.event.globalevent.GlobalEvent;
+import sunshine.cg2.core.game.event.globalevent.HealedEvent;
 import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
 import sunshine.cg2.core.util.JSONObject;
 
@@ -55,6 +56,7 @@ public class Game {
 		GAINARMOR,//{who:int,num:int}
 		GAINBUFF,//{hash:int,buff:BuffObject}
 		GAINCOINS,//{who:int,num:int,isextra:boolean}
+		GAINSHIELD,//{hash:int}
 		GAMESTART,
 		GET,//{card:CardDisplayObject}
 		HEAL,//{(fromhash):int,tohash:int,num:int}
@@ -200,6 +202,17 @@ public class Game {
 			rt++;
 		}while(completely);
 		return rt;
+	}
+	
+	public void checkForHeal()
+	{
+		ArrayList<HealedEvent> healed=new ArrayList<>();
+		for(Card c:table)
+		{
+			HealedEvent e=c.removeHealedEvent();
+			if(e!=null)healed.add(e);
+		}
+		for(HealedEvent e:healed)triggerEvent(e);
 	}
 	
 	public Card createCard(CardInfo info,int from)

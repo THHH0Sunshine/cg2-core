@@ -15,6 +15,8 @@ public class BuffInfo {
 		TAUNT,
 		WINDFURY,
 		POISONOUS,
+		BATTLECRY,
+		DEATHRATTLE,
 		WOOD
 	}
 	

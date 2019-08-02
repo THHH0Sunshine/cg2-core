@@ -8,8 +8,10 @@ import java.util.LinkedList;
 import sunshine.cg2.core.game.BuffInfo.KeyWord;
 import sunshine.cg2.core.game.event.GainBuffEvent;
 import sunshine.cg2.core.game.event.LoseBuffEvent;
+import sunshine.cg2.core.game.event.globalevent.AttackingEvent;
 import sunshine.cg2.core.game.event.globalevent.DamagedEvent;
 import sunshine.cg2.core.game.event.globalevent.GlobalEvent;
+import sunshine.cg2.core.game.event.globalevent.HealedEvent;
 import sunshine.cg2.core.util.JSONArray;
 import sunshine.cg2.core.util.JSONObject;
 
@@ -46,6 +48,7 @@ public class Card {
 	private int number;
 	private Position position=Position.OFFTABLE;
 	private DamagedEvent damagedEvent;
+	private HealedEvent healedEvent;
 	public final CardInfo info;
 	public final int from;
 	public final HashMap<String,Object> tags = new HashMap<>();
@@ -120,6 +123,20 @@ public class Card {
 		}
 	}
 	
+	DamagedEvent removeDamagedEvent()
+	{
+		DamagedEvent rt=damagedEvent;
+		damagedEvent=null;
+		return rt;
+	}
+	
+	HealedEvent removeHealedEvent()
+	{
+		HealedEvent rt=healedEvent;
+		healedEvent=null;
+		return rt;
+	}
+	
 	void replaceOldHero(Card old)
 	{
 		if(info.HP<=0)
@@ -161,6 +178,7 @@ public class Card {
 				}
 			}
 		}
+		game.triggerEvent(new AttackingEvent(this,target));
 		wind++;
 		game.broadcast(Game.Msg.ATTACK,new JSONObject(new Object[][]{{"fromhash",hashCode()},{"tohash",target.hashCode()}}),-1);
 		boolean f = this.number < target.number;
@@ -191,6 +209,13 @@ public class Card {
 		if(buffInfo.events!=null)game.registerEvents(buff,GlobalEvent.class);
 		game.broadcast(Game.Msg.GAINBUFF,new JSONObject(new Object[][]{{"hash",hashCode()},{"buff",buff.getObject()}}),-1);
 		buff.triggerSelf(new GainBuffEvent());
+	}
+	
+	public void gainShield()
+	{
+		if(!positionIsMinionOrHero())return;
+		shield=true;
+		game.broadcast(Game.Msg.GAINSHIELD,new JSONObject(new Object[][]{{"hash",hashCode()}}),-1);
 	}
 	
 	public Buff[] getAllBuffs()
@@ -278,6 +303,25 @@ public class Card {
 		return false;
 	}
 	
+	public void heal(Card from,int count)
+	{
+		if(position==Position.OFFTABLE||HP>=maxHP)return;
+		healWithoutCheck(from,count);
+		game.checkForHeal();
+	}
+	
+	public void healWithoutCheck(Card from,int count)
+	{
+		if(position==Position.OFFTABLE||HP>=maxHP)return;
+		int c=maxHP-HP;
+		if(count<c)c=count;
+		HP+=count;
+		healedEvent=new HealedEvent(from,this,count);
+		JSONObject toSend=new JSONObject(new Object[][]{{"tohash",hashCode()},{"num",c}});
+		if(from!=null)toSend.put("fromhash",from.hashCode());
+		game.broadcast(Game.Msg.HEAL,toSend,-1);
+	}
+	
 	public boolean isDying()
 	{
 		return HP<=0||dying;
@@ -322,24 +366,6 @@ public class Card {
 		if(HP>0)this.HP+=HP;
 		if(this.HP>maxHP)this.HP=maxHP;
 		if(position!=Position.OFFTABLE)game.broadcast(Game.Msg.CHANGEPP,new JSONObject(new Object[][]{{"hash",hashCode()},{"atk",getAtk()},{"maxhp",maxHP},{"hp",this.HP}}),-1);
-	}
-	
-	public DamagedEvent removeDamagedEvent()
-	{
-		DamagedEvent rt=damagedEvent;
-		damagedEvent=null;
-		return rt;
-	}
-	
-	public void restoreHealth(Card from,int count)
-	{
-		if(position==Position.OFFTABLE||HP>=maxHP)return;
-		int c=maxHP-HP;
-		if(count<c)c=count;
-		HP+=count;
-		JSONObject toSend=new JSONObject(new Object[][]{{"tohash",hashCode()},{"num",c}});
-		if(from!=null)toSend.put("fromhash",from.hashCode());
-		game.broadcast(Game.Msg.HEAL,toSend,-1);
 	}
 	
 	public void setAtk(int atk)
