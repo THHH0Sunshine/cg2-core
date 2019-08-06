@@ -25,6 +25,7 @@ import sunshine.cg2.core.game.event.globalevent.AfterTurnEndEvent;
 import sunshine.cg2.core.game.event.globalevent.AttackingEvent;
 import sunshine.cg2.core.game.event.globalevent.DamagedEvent;
 import sunshine.cg2.core.game.event.globalevent.EnterTableEvent;
+import sunshine.cg2.core.game.event.globalevent.HealedEvent;
 import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
 import sunshine.cg2.core.game.event.globalevent.SummonEvent;
 import sunshine.cg2.core.util.CardCreator;
@@ -306,7 +307,10 @@ public class Cards {
 	hs.basic:asfd
 	hs.basic:assj
 	hs.basic:aszh
+	hs.basic:aysm
+	hs.basic:ayst
 	hs.basic:bhzs
+	hs.basic:bjms
 	hs.basic:bxs
 	hs.basic:dcsj
 	hs.basic:dwhb
@@ -316,6 +320,7 @@ public class Cards {
 	hs.basic:hqs
 	hs.basic:hs
 	hs.basic:jh
+	hs.basic:jskz
 	hs.basic:jx
 	hs.basic:llzf
 	hs.basic:lryj
@@ -325,11 +330,16 @@ public class Cards {
 	hs.basic:qx
 	hs.basic:sgdzy
 	hs.basic:sgs
+	hs.basic:sgsy
 	hs.basic:sll
 	hs.basic:slml
+	hs.basic:sscj
+	hs.basic:ssxx
+	hs.basic:sszl
 	hs.basic:sys
 	hs.basic:wzzf
 	hs.basic:xhs
+	hs.basic:xlsj
 	hs.basic:xss
 	hs.basic:yhs
 	hs.basic:ympx
@@ -337,8 +347,10 @@ public class Cards {
 	hs.basic:yxyj
 	hs.basic:zj
 	hs.basic:zlzc
+	hs.basic:zysd
 	hs.basic:zysj
 	hs.basic:zzs
+	~hs.basic:bs
 	~hs.basic:byzsxb
 	~hs.basic:flgs
 	~hs.basic:hdruid
@@ -352,6 +364,8 @@ public class Cards {
 	~hs.basic:hppaladin
 	~hs.basic:hppriest
 	~hs.basic:hpriest
+	~hs.basic:hprogue
+	~hs.basic:hrogue
 	~hs.basic:jx
 	~hs.basic:lok
 	~hs.basic:my
@@ -786,5 +800,121 @@ public class Cards {
 			}).create());
 		ci=cc.name("hppriest").hide().clz(Clz.PRIEST).type(Type.SKILL).cost(2).function(new HealingCard(2)).create();
 		register(cc.name("hpriest").hide().clz(Clz.PRIEST).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
+		register(cc.name("bjms").clz(Clz.PRIEST).type(Type.MINION).stature(1,1,3)
+			.buffs(new BuffInfo(null,new Object[]{HealedEvent.class},false)
+			{
+				@Override public void onTrigger(Buff buff,Event event)
+				{
+					HealedEvent e=(HealedEvent)event;
+					if(e.to.getPosition()==Position.MINION)buff.toBuff.getOwner().draw(1);
+				}
+			}).create());
+		register(cc.name("sgsy").clz(Clz.PRIEST).type(Type.SPELL).cost(1)
+			.function(new CardInfoAdapter()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.getHero().heal(card,5);
+				}
+			}).create());
+		register(cc.name("xlsj").clz(Clz.PRIEST).type(Type.SPELL).cost(1)
+			.function(new CardInfoAdapter()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					List<Card> hand=player.getNextPlayer().getHand();
+					int len=hand.size();
+					if(len<=0)return;
+					player.obtain(hand.get((int)(Math.random()*len)).getHandCopy());
+				}
+			}).create());
+		register(cc.name("zysd").clz(Clz.PRIEST).type(Type.SPELL).cost(1)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target!=null&&target.getPosition()==Position.MINION;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					target.pp(0,2,true);
+					player.draw(1);
+				}
+			}).create());
+		register(cc.name("sscj").clz(Clz.PRIEST).type(Type.SPELL).cost(1).function(new DamageCard(2)).create());
+		register(cc.name("ayst").clz(Clz.PRIEST).type(Type.SPELL).cost(2)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target!=null&&target.getPosition()==Position.MINION&&target.getAtk()<=3;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					target.kill();
+				}
+			}).create());
+		register(cc.name("sszl").clz(Clz.PRIEST).type(Type.SPELL).cost(2)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target!=null&&target.getPosition()==Position.MINION;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					target.setHPWithDmg(target.getHP()*2);
+				}
+			}).create());
+		register(cc.name("aysm").clz(Clz.PRIEST).type(Type.SPELL).cost(3)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target!=null&&target.getPosition()==Position.MINION&&target.getAtk()>=5;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					target.kill();
+				}
+			}).create());
+		register(cc.name("ssxx").clz(Clz.PRIEST).type(Type.SPELL).cost(5)
+				.function(new CardInfoAdapter()
+				{
+					@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+					{
+						Game game=player.getGame();
+						Player nextPlayer=player.getNextPlayer();
+						nextPlayer.getHero().takeDamageWithoutCheck(card,2);
+						nextPlayer.getAllMinions().forEach(c->c.takeDamageWithoutCheck(card,2));
+						game.checkForDamage();
+						player.getHero().healWithoutCheck(card,2);
+						player.getAllMinions().forEach(c->c.healWithoutCheck(card,2));
+						game.checkForHeal();
+					}
+				}).create());
+		register(cc.name("jskz").clz(Clz.PRIEST).type(Type.SPELL).cost(10)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target!=null&&target.getOwner()!=player&&target.getPosition()==Position.MINION;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.takeControlOfField(target);
+				}
+			}).create());
+		ci=cc.name("hprogue").hide().clz(Clz.PRIEST).type(Type.SKILL).cost(2)
+			.function(new CardInfoAdapter()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.equip(player.getGame().createCard("~hs.basic:bs",-1));
+				}
+			}).create();
+		register(ci);
+		register(cc.name("bs").hide().clz(Clz.ROGUE).type(Type.WEAPON).stature(1,1,2).create());
+		register(cc.name("hrogue").hide().clz(Clz.ROGUE).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 	}
 }

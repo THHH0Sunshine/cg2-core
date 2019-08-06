@@ -37,21 +37,6 @@ public class Player {
 		return rt;
 	}
 	
-	private void equip(Card card)
-	{
-		Card old=weapon;
-		if(old!=null)old.kill();
-		weapon=card;
-		game.addCardToTable(card,Card.Position.EQUIP,this);
-		game.broadcast(Game.Msg.EQUIP,new JSONObject(new Object[][]{{"who",index},{"card",card.getFullObject()}}),-1);
-		if(game.getCurrentPlayer()==this)
-		{
-			int batk=old==null?0:(old.getAtk()<0?0:old.getAtk()),aatk=card.getAtk()<0?0:card.getAtk();
-			if(batk!=aatk)hero.pp(aatk-batk,0,false);
-		}
-		game.triggerEvent(new EnterTableEvent(card));
-	}
-	
 	private void pdmg()
 	{
 		game.broadcast(Game.Msg.P,new JSONObject(new Object[][]{{"who",index},{"num",p}}),-1);
@@ -517,6 +502,21 @@ public class Player {
 		}
 	}
 	
+	public void equip(Card card)
+	{
+		Card old=weapon;
+		if(old!=null)old.kill();
+		weapon=card;
+		game.addCardToTable(card,Card.Position.EQUIP,this);
+		game.broadcast(Game.Msg.EQUIP,new JSONObject(new Object[][]{{"who",index},{"card",card.getFullObject()}}),-1);
+		if(game.getCurrentPlayer()==this)
+		{
+			int batk=old==null?0:(old.getAtk()<0?0:old.getAtk()),aatk=card.getAtk()<0?0:card.getAtk();
+			if(batk!=aatk)hero.pp(aatk-batk,0,false);
+		}
+		game.triggerEvent(new EnterTableEvent(card));
+	}
+	
 	public void fillCoins(int num)
 	{
 		if(num<=0)return;
@@ -579,6 +579,12 @@ public class Player {
 		return game;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public List<Card> getHand()
+	{
+		return (List<Card>)hand.clone();
+	}
+	
 	public Card getHero()
 	{
 		return hero;
@@ -612,6 +618,14 @@ public class Player {
 	public boolean hasStaghelm()
 	{
 		return hasStaghelm;
+	}
+	
+	public void takeControlOfField(Card card)
+	{
+		Player p=card.getOwner();
+		if(p==null||!p.field.contains(card))return;
+		p.removeField(card,LeaveTableEvent.Reason.CONTROL);
+		p.summon0(card,field.size(),Card.Position.MINION);
 	}
 	
 	public void loseEmptyCoins(int num)

@@ -244,6 +244,26 @@ public class Card {
 		return game;
 	}
 	
+	public Card getHandCopy()
+	{
+		if(position!=Position.OFFTABLE)return null;
+		Card rt=new Card(game,info,-1,cost,atk,HP);
+		rt.maxHP=maxHP;
+		rt.datk=datk;
+		rt.dHP=dHP;
+		return rt;
+	}
+	
+	public int getHP()
+	{
+		return HP;
+	}
+	
+	public int getMaxHP()
+	{
+		return maxHP;
+	}
+	
 	public int getMaxWind()
 	{
 		return hasKW(BuffInfo.KeyWord.WINDFURY)?2:1;
@@ -380,9 +400,28 @@ public class Card {
 		int pHP=HP-this.HP-dHP;
 		pp(patk,pHP,true);
 	}
+	
+	public void setAtkAndHPWithDmg(int atk,int HP)
+	{
+		int dmg=maxHP-this.HP;
+		this.HP=maxHP;
+		maxHP+=dmg;
+		int patk=atk-this.atk-datk;
+		int pHP=HP-this.HP-dHP;
+		pp(patk,pHP,true);
+	}
+	
 	public void setHP(int HP)
 	{
 		this.HP=maxHP;
+		pp(0,HP-this.HP-dHP,true);
+	}
+	
+	public void setHPWithDmg(int HP)
+	{
+		int dmg=maxHP-this.HP;
+		this.HP=maxHP;
+		maxHP+=dmg;
 		pp(0,HP-this.HP-dHP,true);
 	}
 	
