@@ -9,6 +9,8 @@ import sunshine.cg2.core.game.event.globalevent.AfterTurnEndEvent;
 import sunshine.cg2.core.game.event.globalevent.EnterTableEvent;
 import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
 import sunshine.cg2.core.game.event.globalevent.SummonEvent;
+import sunshine.cg2.core.game.event.globalevent.TurnEndEvent;
+import sunshine.cg2.core.game.event.globalevent.TurnStartEvent;
 import sunshine.cg2.core.util.JSONArray;
 import sunshine.cg2.core.util.JSONObject;
 
@@ -27,6 +29,7 @@ public class Player {
 	private final ArrayList<Card> field;
 	private final ArrayList<Card> hand;
 	private final ArrayList<Card> deck;
+	private int spellPower;
 	private boolean hasStaghelm;
 	
 	private Card draw()
@@ -120,10 +123,12 @@ public class Player {
 		game.broadcast(Game.Msg.TURN,new JSONObject(new Object[][]{{"who",index}}),-1);
 		gainEmptyCoins(rule.getCoinNum(pos,round),false);
 		fillCoins(maxCoins);
-		if(weapon!=null&&weapon.getAtk()>0)hero.pp(weapon.getAtk(),0,false);
+		if(weapon!=null&&weapon.getAtk()>0)hero.ppNoSilence(weapon.getAtk(),0);
 		hero.resetWind();
 		for(Card c:field)if(c.positionIsMinionOrHero())c.resetWind();
 		if(skill!=null)skill.resetWind();
+		game.triggerEvent(new TurnStartEvent(this));
+		game.checkForDeath(true);
 		draw(rule.getDrawNum(pos,round));
 		game.checkForDeath(true);
 		boolean playing=true;
@@ -334,9 +339,11 @@ public class Player {
 				leave(false);
 			}
 		}
+		game.triggerEvent(new TurnEndEvent(this));
+		game.checkForDeath(true);
 		game.triggerEvent(new AfterTurnEndEvent(this));
 		loseEmptyCoins(extraCoins);
-		if(weapon!=null&&weapon.getAtk()>0)hero.pp(-weapon.getAtk(),0,false);
+		if(weapon!=null&&weapon.getAtk()>0)hero.ppNoSilence(-weapon.getAtk(),0);
 		for(int i=-1;i<field.size();i++)
 		{
 			Card c=i<0?hero:field.get(i);
@@ -431,6 +438,13 @@ public class Player {
 		return null;
 	}
 	
+	public void addSpellPower(int num)
+	{
+		if(num==0)return;
+		spellPower+=num;
+		game.broadcast(Game.Msg.SPELLPOWER,new JSONObject(new Object[][]{{"who",index},{"num",spellPower}}),-1);
+	}
+	
 	public int askForDiscover(Card[] choices) throws GameOverThrowable
 	{
 		JSONArray ja=new JSONArray(choices.length);
@@ -487,6 +501,15 @@ public class Player {
 			weapon.takeDamage(null,1);
 	}
 	
+	public void discardHand(int num)
+	{
+		if(num<=0)return;
+		int len=hand.size();
+		if(len<=0)return;
+		if(num>len)num=len;
+		for(;num>0;num--)throwHand((int)(Math.random()*num));
+	}
+	
 	public void draw(int num)
 	{
 		for(int i=0;i<num;i++)
@@ -512,7 +535,7 @@ public class Player {
 		if(game.getCurrentPlayer()==this)
 		{
 			int batk=old==null?0:(old.getAtk()<0?0:old.getAtk()),aatk=card.getAtk()<0?0:card.getAtk();
-			if(batk!=aatk)hero.pp(aatk-batk,0,false);
+			if(batk!=aatk)hero.ppNoSilence(aatk-batk,0);
 		}
 		game.triggerEvent(new EnterTableEvent(card));
 	}
@@ -585,6 +608,11 @@ public class Player {
 		return (List<Card>)hand.clone();
 	}
 	
+	public int getHandNum()
+	{
+		return hand.size();
+	}
+	
 	public Card getHero()
 	{
 		return hero;
@@ -613,6 +641,16 @@ public class Player {
 	public Player getNextPlayer()
 	{
 		return getNextPlayer(1);
+	}
+	
+	public int getSpellPower()
+	{
+		return spellPower;
+	}
+	
+	public Card getWeapon()
+	{
+		return weapon;
 	}
 	
 	public boolean hasStaghelm()
@@ -712,7 +750,7 @@ public class Player {
 		old.kill();
 		weapon=null;
 		game.broadcast(Game.Msg.THROWWEAPON,new JSONObject(new Object[][]{{"who",index}}),-1);
-		if(game.getCurrentPlayer()==this&&old.getAtk()>0)hero.pp(-old.getAtk(),0,false);
+		if(game.getCurrentPlayer()==this&&old.getAtk()>0)hero.ppNoSilence(-old.getAtk(),0);
 	}
 	
 	public void transformField(Card from,Card to,boolean ice)

@@ -17,6 +17,7 @@ public class BuffInfo {
 		POISONOUS,
 		BATTLECRY,
 		DEATHRATTLE,
+		SPELLPOWER,
 		WOOD
 	}
 	

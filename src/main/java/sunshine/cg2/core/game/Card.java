@@ -10,6 +10,7 @@ import sunshine.cg2.core.game.event.GainBuffEvent;
 import sunshine.cg2.core.game.event.LoseBuffEvent;
 import sunshine.cg2.core.game.event.globalevent.AttackingEvent;
 import sunshine.cg2.core.game.event.globalevent.DamagedEvent;
+import sunshine.cg2.core.game.event.globalevent.DamagingEvent;
 import sunshine.cg2.core.game.event.globalevent.GlobalEvent;
 import sunshine.cg2.core.game.event.globalevent.HealedEvent;
 import sunshine.cg2.core.util.JSONArray;
@@ -51,7 +52,7 @@ public class Card {
 	private HealedEvent healedEvent;
 	public final CardInfo info;
 	public final int from;
-	public final HashMap<String,Object> tags = new HashMap<>();
+	public final HashMap<String,Object> tags=new HashMap<>();
 	
 	Card(Game game,CardInfo info,int from,int cost,int atk,int HP)
 	{
@@ -342,6 +343,11 @@ public class Card {
 		game.broadcast(Game.Msg.HEAL,toSend,-1);
 	}
 	
+	public boolean isDamaged()
+	{
+		return maxHP>HP;
+	}
+	
 	public boolean isDying()
 	{
 		return HP<=0||dying;
@@ -368,19 +374,21 @@ public class Card {
 		return position==Position.MINION||position==Position.HERO;
 	}
 	
-	public void pp(int atk,int HP,boolean decOnSilence)
+	public void pp(int atk,int HP)
 	{
-		if(decOnSilence)
-		{
-			datk+=atk;
-			dHP+=HP;
-		}
+		datk+=atk;
+		dHP+=HP;
+		ppNoSilence(atk,HP);
+	}
+	
+	public void ppNoSilence(int atk,int HP)
+	{
 		int batk=this.atk<0?0:this.atk;
 		this.atk+=atk;
 		if(position==Position.EQUIP&&game.getCurrentPlayer()==owner)
 		{
 			int aatk=this.atk<0?0:this.atk;
-			if(batk!=aatk)owner.getHero().pp(aatk-batk,0,false);
+			if(batk!=aatk)owner.getHero().ppNoSilence(aatk-batk,0);
 		}
 		maxHP+=HP;
 		if(HP>0)this.HP+=HP;
@@ -390,7 +398,7 @@ public class Card {
 	
 	public void setAtk(int atk)
 	{
-		pp(atk-this.atk-datk,0,true);
+		pp(atk-this.atk-datk,0);
 	}
 	
 	public void setAtkAndHP(int atk,int HP)
@@ -398,7 +406,7 @@ public class Card {
 		this.HP=maxHP;
 		int patk=atk-this.atk-datk;
 		int pHP=HP-this.HP-dHP;
-		pp(patk,pHP,true);
+		pp(patk,pHP);
 	}
 	
 	public void setAtkAndHPWithDmg(int atk,int HP)
@@ -408,13 +416,13 @@ public class Card {
 		maxHP+=dmg;
 		int patk=atk-this.atk-datk;
 		int pHP=HP-this.HP-dHP;
-		pp(patk,pHP,true);
+		pp(patk,pHP);
 	}
 	
 	public void setHP(int HP)
 	{
 		this.HP=maxHP;
-		pp(0,HP-this.HP-dHP,true);
+		pp(0,HP-this.HP-dHP);
 	}
 	
 	public void setHPWithDmg(int HP)
@@ -422,7 +430,7 @@ public class Card {
 		int dmg=maxHP-this.HP;
 		this.HP=maxHP;
 		maxHP+=dmg;
-		pp(0,HP-this.HP-dHP,true);
+		pp(0,HP-this.HP-dHP);
 	}
 	
 	boolean shouldBreakIce()
@@ -454,7 +462,7 @@ public class Card {
 			Buff b = it.next();
 			if (!b.info.isEffect)it.remove();
 		}
-		pp(-datk,-dHP,true);
+		pp(-datk,-dHP);
 	}
 	
 	public void takeDamage(Card from,int damage)
@@ -474,14 +482,17 @@ public class Card {
 		}
 		else
 		{
-			if(armor>=damage)armor-=damage;
+			DamagingEvent e=new DamagingEvent(from,this,damage);
+			game.triggerEvent(e);
+			if(e.damage<=0)return;
+			if(armor>=e.damage)armor-=e.damage;
 			else
 			{
-				HP-=damage-armor;
+				HP-=e.damage-armor;
 				armor=0;
 			}
-			damagedEvent=new DamagedEvent(from,this,damage);
-			JSONObject toSend=new JSONObject(new Object[][]{{"tohash",hashCode()},{"num",damage}});
+			damagedEvent=new DamagedEvent(from,this,e.damage);
+			JSONObject toSend=new JSONObject(new Object[][]{{"tohash",hashCode()},{"num",e.damage}});
 			if(from!=null)toSend.put("fromhash",from.hashCode());
 			game.broadcast(Game.Msg.DAMAGE,toSend,-1);
 		}

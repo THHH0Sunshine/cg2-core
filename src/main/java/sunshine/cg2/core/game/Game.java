@@ -72,6 +72,7 @@ public class Game {
 		SEATS,//{num:int,self:int,first:int}
 		SHUFFLE,//{who:int}
 		SPENDCOINS,//{who:int,num:int}
+		SPELLPOWER,//{who:int,num:int}
 		STOPPLAY,
 		SUMMON,//{pIndex:int,mIndex:int,card:CardFullObject}
 		THROWDECK,//{who:int,num:int}
