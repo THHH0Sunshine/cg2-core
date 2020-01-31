@@ -17,8 +17,7 @@ public class BuffInfo {
 		POISONOUS,
 		BATTLECRY,
 		DEATHRATTLE,
-		SPELLPOWER,
-		WOOD
+		SPELLPOWER
 	}
 	
 	public final KeyWord[] keyWords;
@@ -34,5 +33,10 @@ public class BuffInfo {
 	
 	public void onTrigger(Buff buff,Event event)
 	{
+	}
+	
+	public boolean canAttack(Card card,Card target)
+	{
+		return true;
 	}
 }

@@ -191,6 +191,13 @@ public class Card {
 		if(position==Position.HERO)owner.damageWeapon();
 	}
 	
+	public boolean canAttack(Card target)
+	{
+		for(Buff b:buffs)
+			if(!b.info.canAttack(this,target))return false;
+		return true;
+	}
+	
 	public void forceGreen()
 	{
 		forceGreen=true;
@@ -295,7 +302,7 @@ public class Card {
 		if(forceGreen)return 2;
 		HashSet<BuffInfo.KeyWord> kws=new HashSet<>();
 		for(Buff b:buffs)if(b.info.keyWords!=null)for(BuffInfo.KeyWord kw:b.info.keyWords)kws.add(kw);
-		if(kws.contains(BuffInfo.KeyWord.WOOD)||kws.contains(BuffInfo.KeyWord.FROZEN)||info.type!=CardInfo.Type.SKILL&&atk<=0||wind>=getMaxWind())return 0;
+		if(kws.contains(BuffInfo.KeyWord.FROZEN)||info.type!=CardInfo.Type.SKILL&&atk<=0||wind>=getMaxWind())return 0;
 		if(!sleeping)return 2;
 		if(kws.contains(BuffInfo.KeyWord.CHARGE))return 2;
 		if(kws.contains(BuffInfo.KeyWord.RUSH))return 1;

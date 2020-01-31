@@ -236,6 +236,22 @@ public class Cards {
 		}
 	}
 	
+	public static class KWBuffInfo extends BuffInfo
+	{
+		public KWBuffInfo(KeyWord... keyWords)
+		{
+			super(keyWords,null,false);
+		}
+	}
+	
+	public static class KWEffectBuffInfo extends BuffInfo
+	{
+		public KWEffectBuffInfo(KeyWord... keyWords)
+		{
+			super(keyWords,null,true);
+		}
+	}
+	
 	public static abstract class DeathrattleBuffInfo extends BuffInfo
 	{
 		public DeathrattleBuffInfo()
@@ -323,7 +339,7 @@ public class Cards {
 		DEFAULT_LIBRARY.put(card.name,card);
 	}
 	
-	public static final BuffInfo battlecry=new BuffInfo(new KeyWord[]{KeyWord.BATTLECRY},null,false);
+	public static final BuffInfo battlecry=new KWBuffInfo(KeyWord.BATTLECRY);
 	
 	public static final BuffInfo poisonous=new BuffInfo(new KeyWord[]{KeyWord.POISONOUS},new Object[]{DamagedEvent.class},false)
 	{
@@ -355,6 +371,7 @@ public class Cards {
 	public static final String[] basicTotems=new String[]{"~hs.basic:zrtt","~hs.basic:kqzntt","~hs.basic:zltt","~hs.basic:sztt"};
 	
 	/*
+	hs.basic:ajf
 	hs.basic:albkbhz
 	hs.basic:asfd
 	hs.basic:assj
@@ -367,9 +384,12 @@ public class Cards {
 	hs.basic:bjms
 	hs.basic:bszj
 	hs.basic:bxs
+	hs.basic:cf
 	hs.basic:ckzr
 	hs.basic:cs
+	hs.basic:cyzf
 	hs.basic:dcsj
+	hs.basic:dpgd
 	hs.basic:dr
 	hs.basic:ds
 	hs.basic:dwhb
@@ -389,6 +409,7 @@ public class Cards {
 	hs.basic:jskz
 	hs.basic:jx
 	hs.basic:kjdyh
+	hs.basic:kkljyws
 	hs.basic:lhzh
 	hs.basic:llzf
 	hs.basic:lryj
@@ -404,6 +425,7 @@ public class Cards {
 	hs.basic:shwq
 	hs.basic:sll
 	hs.basic:slml
+	hs.basic:spz
 	hs.basic:sscj
 	hs.basic:ssxx
 	hs.basic:sszl
@@ -413,6 +435,7 @@ public class Cards {
 	hs.basic:ttzl
 	hs.basic:wysz
 	hs.basic:wzzf
+	hs.basic:xfz
 	hs.basic:xhs
 	hs.basic:xkxz
 	hs.basic:xlsj
@@ -426,9 +449,12 @@ public class Cards {
 	hs.basic:yx
 	hs.basic:yxcz
 	hs.basic:yxyj
+	hs.basic:yydj
+	hs.basic:zgzhg
 	hs.basic:zj
 	hs.basic:zlzc
 	hs.basic:zmyg
+	hs.basic:zs
 	hs.basic:zysd
 	hs.basic:zysj
 	hs.basic:zzs
@@ -506,7 +532,7 @@ public class Cards {
 				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
-					target.gainBuff(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false),"hs.basic:yxyj",null);
+					target.gainBuff(new KWBuffInfo(KeyWord.TAUNT),"hs.basic:yxyj",null);
 					target.pp(2,2);
 				}
 			}).create());
@@ -559,7 +585,7 @@ public class Cards {
 					player.draw(1);
 				}
 			}).create());
-		register(cc.name("albkbhz").clz(Clz.DRUID).type(Type.MINION).stature(8,8,8).buffs(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)).create());
+		register(cc.name("albkbhz").clz(Clz.DRUID).type(Type.MINION).stature(8,8,8).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
 		ci=cc.name("hphunter").hide().clz(Clz.HUNTER).type(Type.SKILL).cost(2)
 			.function(new CardInfoAdapter()
 			{
@@ -618,8 +644,8 @@ public class Cards {
 					player.summon(player.getGame().createCard(choices[who],-1));
 				}
 			}).create());
-		register(cc.name("hf").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,4,2).buffs(new BuffInfo(new KeyWord[]{KeyWord.CHARGE},null,false)).create());
-		register(cc.name("ms").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,4,4).buffs(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)).create());
+		register(cc.name("hf").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,4,2).buffs(new KWBuffInfo(KeyWord.CHARGE)).create());
+		register(cc.name("ms").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,4,4).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
 		register(cc.name("lok").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,2,4).buffs(new MyOtherMinionBuffInfo(new PPEffectBuffInfo(1,0),"~hs.basic:lok")).create());
 		register(cc.name("slml").clz(Clz.HUNTER).type(Type.SPELL).cost(3)
 			.function(new DamageCard(3)
@@ -665,12 +691,12 @@ public class Cards {
 					if(target!=null)
 					{
 						target.pp(2,2);
-						target.gainBuff(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false),"hs.basic:xss",null);
+						target.gainBuff(new KWBuffInfo(KeyWord.TAUNT),"hs.basic:xss",null);
 					}
 				}
 			}).create());
 		register(cc.name("tyxn").clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(5,2,5)
-			.buffs(new MyMinionBuffInfo(new BuffInfo(new KeyWord[]{KeyWord.CHARGE},null,true),"hs.basic:tyxn")
+			.buffs(new MyMinionBuffInfo(new KWEffectBuffInfo(KeyWord.CHARGE),"hs.basic:tyxn")
 			{
 				@Override protected boolean filter(Buff buff,Card card)
 				{
@@ -722,7 +748,7 @@ public class Cards {
 					for(int i=0;i<2;i++)player.summon(game.createCard("~hs.basic:jx",-1));
 				}
 			}).create());
-		register(cc.name("jx").hide().clz(Clz.MAGE).type(Type.MINION).stature(1,0,2).buffs(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)).create());
+		register(cc.name("jx").hide().clz(Clz.MAGE).type(Type.MINION).stature(1,0,2).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
 		register(cc.name("hbj").clz(Clz.MAGE).type(Type.SPELL).cost(2)
 			.function(new DamageCard(3)
 			{
@@ -1140,7 +1166,7 @@ public class Cards {
 					}
 				}
 			}).create());
-		register(cc.fullName(basicTotems[3]).clz(Clz.SHAMAN).type(Type.MINION).races(Race.TOTEM).stature(1,0,2).buffs(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)).create());
+		register(cc.fullName(basicTotems[3]).clz(Clz.SHAMAN).type(Type.MINION).races(Race.TOTEM).stature(1,0,2).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
 		register(cc.name("hshaman").hide().clz(Clz.SHAMAN).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 		register(cc.name("xzzl").clz(Clz.SHAMAN).type(Type.SPELL).cost(0)
 			.function(new CardInfoAdapter()
@@ -1152,7 +1178,7 @@ public class Cards {
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					target.heal(card,target.getMaxHP());
-					target.gainBuff(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false),"hs.basic:xzzl",null);
+					target.gainBuff(new KWBuffInfo(KeyWord.TAUNT),"hs.basic:xzzl",null);
 				}
 			}).create());
 		register(cc.name("ttzl").clz(Clz.SHAMAN).type(Type.SPELL).cost(0)
@@ -1197,7 +1223,7 @@ public class Cards {
 				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
-					target.gainBuff(new BuffInfo(new KeyWord[]{KeyWord.WINDFURY},null,false),"hs.basic:fn",null);
+					target.gainBuff(new KWBuffInfo(KeyWord.WINDFURY),"hs.basic:fn",null);
 				}
 			}).create());
 		register(cc.name("hstt").clz(Clz.SHAMAN).type(Type.MINION).races(Race.TOTEM).stature(3,0,3).buffs(new NearbyMinionBuffInfo(new PPEffectBuffInfo(2,0),"hs.basic:hstt")).create());
@@ -1213,7 +1239,7 @@ public class Cards {
 					target.transformField(player.getGame().createCard("~hs.basic:qw",-1),false);
 				}
 			}).create());
-		register(cc.name("qw").hide().clz(Clz.SHAMAN).type(Type.MINION).races(Race.BEAST).stature(1,0,1).buffs(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)).create());
+		register(cc.name("qw").hide().clz(Clz.SHAMAN).type(Type.MINION).races(Race.BEAST).stature(1,0,1).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
 		register(cc.name("fyz").clz(Clz.SHAMAN).type(Type.MINION).stature(4,3,3).buffs(battlecry)
 			.function(new CardInfoAdapter()
 			{
@@ -1223,7 +1249,7 @@ public class Cards {
 				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
-					target.gainBuff(new BuffInfo(new KeyWord[]{KeyWord.WINDFURY},null,false),"hs.basic:fyz",null);
+					target.gainBuff(new KWBuffInfo(KeyWord.WINDFURY),"hs.basic:fyz",null);
 				}
 			}).create());
 		register(cc.name("sx").clz(Clz.SHAMAN).type(Type.SPELL).cost(5)
@@ -1294,7 +1320,7 @@ public class Cards {
 					target.gainBuff(corrupted,"hs.basic:fss",null);
 				}
 			}).create());
-		register(cc.name("xkxz").clz(Clz.WARLOCK).type(Type.MINION).races(Race.DEMON).stature(1,1,3).buffs(new BuffInfo(new KeyWord[]{KeyWord.TAUNT},null,false)).create());
+		register(cc.name("xkxz").clz(Clz.WARLOCK).type(Type.MINION).races(Race.DEMON).stature(1,1,3).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
 		register(cc.name("mq").clz(Clz.WARLOCK).type(Type.MINION).races(Race.DEMON).stature(2,4,3).buffs(battlecry)
 			.function(new CardInfoAdapter()
 			{
@@ -1350,7 +1376,102 @@ public class Cards {
 			}).create();
 		register(ci);
 		register(cc.name("hwarrior").hide().clz(Clz.WARRIOR).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
-		//...
+		register(cc.name("cf").clz(Clz.WARRIOR).type(Type.SPELL).cost(1)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target!=null&&target.getPosition()==Position.MINION&&target.getOwner()==player;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					target.gainBuff(new KWBuffInfo(KeyWord.CHARGE),"hs.basic:cf",null);
+					target.gainBuff(new ThisTurnBuffInfo()
+					{
+						@Override public boolean canAttack(Card card,Card target)
+						{
+							return target.getPosition()!=Position.HERO;
+						}
+					},"hs.basic:cf",null);
+				}
+			}).create());
+		register(cc.name("xfz").clz(Clz.WARRIOR).type(Type.SPELL).cost(1)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target==null;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					Game game=player.getGame();
+					game.forEachCardOnTable(c->{if(c.getPosition()==Position.MINION)c.takeDamageWithoutCheck(card,1);});
+					game.checkForDamage();
+				}
+			}).create());
+		register(cc.name("yydj").clz(Clz.WARRIOR).type(Type.SPELL).cost(2)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target==null;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.getHero().gainBuff(new ThisTurnPPBuffInfo(4,0),"hs.basic:yydj",null);
+				}
+			}).create());
+		register(cc.name("zs").clz(Clz.WARRIOR).type(Type.SPELL).cost(2)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target!=null&&target.getPosition()==Position.MINION&&target.getOwner()!=player&&target.isDamaged();
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					target.kill();
+				}
+			}).create());
+		register(cc.name("cyzf").clz(Clz.WARRIOR).type(Type.WEAPON).stature(3,3,2).create());
+		register(cc.name("spz").clz(Clz.WARRIOR).type(Type.SPELL).cost(2)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target==null&&player.getNextPlayer().getMinionNum()<2;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					List<Card> minions=player.getNextPlayer().getAllMinions();
+					if(minions.size()>=2)for(int len=2;len>0;len--)minions.remove((int)(Math.random()*len)).takeDamageWithoutCheck(card,2);
+					player.getGame().checkForDamage();
+				}
+			}).create());
+		register(cc.name("zgzhg").clz(Clz.WARRIOR).type(Type.MINION).stature(3,2,3)
+			.buffs(new MyMinionBuffInfo(new PPEffectBuffInfo(1,0),"hs.basic:sgshg")
+			{
+				@Override protected boolean filter(Buff buff, Card card)
+				{
+					return card.hasKW(KeyWord.CHARGE);
+				}
+			}).create());
+		register(cc.name("dpgd").clz(Clz.WARRIOR).type(Type.SPELL).cost(3)
+			.function(new CardInfoAdapter()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target==null;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.gainArmor(5);
+					player.draw(1);
+				}
+			}).create());
+		register(cc.name("kkljyws").clz(Clz.WARRIOR).type(Type.MINION).stature(4,4,3)
+			.buffs(new KWBuffInfo(KeyWord.CHARGE)).create());
+		register(cc.name("ajf").clz(Clz.WARRIOR).type(Type.WEAPON).stature(5,5,2).create());
 	}
 	
 	public static int getTotemFlagFromField(List<? extends Card> field)

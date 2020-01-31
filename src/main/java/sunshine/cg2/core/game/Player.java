@@ -30,7 +30,7 @@ public class Player {
 	private final ArrayList<Card> hand;
 	private final ArrayList<Card> deck;
 	private int spellPower;
-	private boolean hasStaghelm;
+	private int staghelmCount;
 	
 	private Card draw()
 	{
@@ -164,16 +164,16 @@ public class Player {
 						for(int cci:tt)
 						{
 							Card cc = p.field.get(cci);
-							if(cc.hasKW(BuffInfo.KeyWord.IMMUNE)||!c.info.canAttack(c,cc))tt.remove(cci);
+							if(cc.hasKW(BuffInfo.KeyWord.IMMUNE)||!c.canAttack(cc))tt.remove(cci);
 						}
 					}
 					else
 					{
-						if(speed==2&&!p.hero.hasKW(BuffInfo.KeyWord.IMMUNE)&&!p.hero.hasKW(BuffInfo.KeyWord.STEALTH)&&c.info.canAttack(c,p.hero))tt.add(-1);
+						if(speed==2&&!p.hero.hasKW(BuffInfo.KeyWord.IMMUNE)&&!p.hero.hasKW(BuffInfo.KeyWord.STEALTH)&&c.canAttack(p.hero))tt.add(-1);
 						for(int i=0;i<pmcount;i++)
 						{
 							Card ccc=p.field.get(i);
-							if(c.positionIsMinionOrHero()&&!ccc.hasKW(BuffInfo.KeyWord.IMMUNE)&&!ccc.hasKW(BuffInfo.KeyWord.STEALTH)&&c.info.canAttack(c,ccc))tt.add(i);
+							if(c.positionIsMinionOrHero()&&!ccc.hasKW(BuffInfo.KeyWord.IMMUNE)&&!ccc.hasKW(BuffInfo.KeyWord.STEALTH)&&c.canAttack(ccc))tt.add(i);
 						}
 					}
 					for(int cci:tt)targets.add(new JSONObject(new Object[][]{{"pIndex",p.index},{"mIndex",cci}}));
@@ -185,7 +185,7 @@ public class Player {
 			for(int i=0;i<hand.size();i++)
 			{
 				Card c=hand.get(i);
-				int choices=hasStaghelm?1:c.info.choices;
+				int choices=hasStaghelm()?1:c.info.choices;
 				JSONArray toAdd=new JSONArray(choices);
 				for(int j=0;j<choices;j++)toAdd.add(new JSONArray());
 				handCan.add(toAdd);
@@ -211,7 +211,7 @@ public class Player {
 			JSONArray skillCan=null;
 			if(skill!=null&&skill.info.canPlay&&skill.getCost()<=coins&&skill.getSpeed()>0)
 			{
-				int choices=hasStaghelm?1:skill.info.choices;
+				int choices=hasStaghelm()?1:skill.info.choices;
 				skillCan=new JSONArray(choices);
 				for(int i=0;i<choices;i++)
 				{
@@ -287,7 +287,7 @@ public class Player {
 					reply[2]<0||
 					reply[2]>minionNum||
 					reply[3]<0||
-					reply[3]>=(hasStaghelm?1:hand.get(reply[1]).info.choices))leave(false);
+					reply[3]>=(hasStaghelm()?1:hand.get(reply[1]).info.choices))leave(false);
 				f=true;
 				for(Object o:(JSONArray)((JSONArray)handCan.get(reply[1])).get(reply[3]))
 				{
@@ -316,7 +316,7 @@ public class Player {
 					target=reply[3]<0?tarpp.hero:tarpp.field.get(reply[3]);
 					if(!target.positionIsMinionOrHero())target=null;
 				}
-				if(reply[1]<0||reply[1]>=(hasStaghelm?1:skill.info.choices))leave(false);
+				if(reply[1]<0||reply[1]>=(hasStaghelm()?1:skill.info.choices))leave(false);
 				f=true;
 				for(Object o:(JSONArray)skillCan.get(reply[1]))
 				{
@@ -572,6 +572,11 @@ public class Player {
 		return true;
 	}
 	
+	public void gainOneStaghelm()
+	{
+		staghelmCount++;
+	}
+	
 	public List<Card> getAliveMinions()
 	{
 		ArrayList<Card> rt=new ArrayList<>(field.size());
@@ -655,15 +660,7 @@ public class Player {
 	
 	public boolean hasStaghelm()
 	{
-		return hasStaghelm;
-	}
-	
-	public void takeControlOfField(Card card)
-	{
-		Player p=card.getOwner();
-		if(p==null||!p.field.contains(card))return;
-		p.removeField(card,LeaveTableEvent.Reason.CONTROL);
-		p.summon0(card,field.size(),Card.Position.MINION);
+		return staghelmCount>0;
 	}
 	
 	public void loseEmptyCoins(int num)
@@ -675,6 +672,11 @@ public class Player {
 		else extraCoins=0;
 		if(coins>maxCoins)coins=maxCoins;
 		game.broadcast(Game.Msg.LOSECOINS,new JSONObject(new Object[][]{{"who",index},{"num",num}}),-1);
+	}
+	
+	public void loseOneStaghelm()
+	{
+		staghelmCount--;
 	}
 	
 	public void obtain(Card card)
@@ -707,11 +709,6 @@ public class Player {
 		game.broadcast(Game.Msg.REMOVEMINION,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi}}),-1);
 	}
 	
-	public void setHasStaghelm(boolean f)
-	{
-		hasStaghelm=f;
-	}
-	
 	public void shuffle(Card card)
 	{
 		int len=deck.size();
@@ -735,6 +732,14 @@ public class Player {
 	public void summon(Card minion) throws GameOverThrowable
 	{
 		summon(minion,field.size());
+	}
+	
+	public void takeControlOfField(Card card)
+	{
+		Player p=card.getOwner();
+		if(p==null||!p.field.contains(card))return;
+		p.removeField(card,LeaveTableEvent.Reason.CONTROL);
+		p.summon0(card,field.size(),Card.Position.MINION);
 	}
 	
 	public void throwHand(int index)

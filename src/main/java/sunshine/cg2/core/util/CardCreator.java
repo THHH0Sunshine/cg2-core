@@ -41,12 +41,6 @@ public class CardCreator {
 		}
 		
 		@Override
-		public boolean canAttack(Card card,Card target)
-		{
-			return function.canAttack(card, target);
-		}
-		
-		@Override
 		public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
 		{
 			function.doBattlecry(card, player, target, choi);
@@ -70,11 +64,6 @@ public class CardCreator {
 		public boolean canTarget(Card card,Player player,Card target,int choi)
 		{
 			return target == null;
-		}
-		
-		public boolean canAttack(Card card,Card target)
-		{
-			return true;
 		}
 		
 		public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable

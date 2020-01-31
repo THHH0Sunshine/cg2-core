@@ -74,11 +74,6 @@ public class CardInfo {
 		return false;
 	}
 	
-	public boolean canAttack(Card card,Card target)
-	{
-		return true;
-	}
-	
 	public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
 	{
 	}
