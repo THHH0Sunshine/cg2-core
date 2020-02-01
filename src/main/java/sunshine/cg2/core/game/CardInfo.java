@@ -1,7 +1,5 @@
 package sunshine.cg2.core.game;
 
-import sunshine.cg2.core.util.JSONObject;
-
 public class CardInfo {
 
 	public enum Type
@@ -30,7 +28,7 @@ public class CardInfo {
 		WARRIOR,
 	}
 	
-	public enum Race
+	public enum Tag
 	{
 		BEAST,
 		DRAGON,
@@ -38,11 +36,13 @@ public class CardInfo {
 		ELEMENT,
 		TOTEM,
 		DEMON,
+		BATTLECRY,
+		COMBO,
 	}
 	
 	public final String name;
 	public final Clz clz;
-	public final Race[] races;
+	public final Tag[] tags;
 	public final Type type;
 	public final boolean canPlay;
 	public final int cost;
@@ -53,11 +53,11 @@ public class CardInfo {
 	public final int choices;
 	public final CardInfo skill;
 	
-	public CardInfo(String name,Clz clz,Race[] races,Type type,boolean canPlay,int cost,int atk,int HP,boolean shield,BuffInfo[] buffs,int choices,CardInfo skill)
+	public CardInfo(String name,Clz clz,Tag[] tags,Type type,boolean canPlay,int cost,int atk,int HP,boolean shield,BuffInfo[] buffs,int choices,CardInfo skill)
 	{
 		this.name=name;
 		this.clz=clz;
-		this.races=races;
+		this.tags=tags;
 		this.type=type;
 		this.canPlay=canPlay;
 		this.cost=cost;
@@ -76,15 +76,5 @@ public class CardInfo {
 	
 	public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
 	{
-	}
-	
-	public JSONObject getHandTags(Card card)
-	{
-		return null;
-	}
-	
-	public JSONObject getTableTags(Card card)
-	{
-		return null;
 	}
 }

@@ -31,6 +31,7 @@ public class Player {
 	private final ArrayList<Card> deck;
 	private int spellPower;
 	private int staghelmCount;
+	private final ArrayList<Card> soul=new ArrayList<>();
 	
 	private Card draw()
 	{
@@ -38,6 +39,43 @@ public class Player {
 		Card rt=deck.remove(0);
 		hand.add(rt);
 		return rt;
+	}
+	
+	private int getFieldInsertIndex(Card near,boolean left)
+	{
+		int n=field.size();
+		int sn=soul.size();
+		int poss=soul.indexOf(near);
+		if(poss<0)return n;
+		else
+		{
+			if(left)
+			{
+				for(int i=poss-1;i>=0;i--)
+				{
+					Card c=soul.get(i);
+					if(c.getPosition()!=Card.Position.OFFTABLE)
+					{
+						int ind=field.indexOf(c);
+						if(ind<0)return -1;
+						return ind+1;
+					}
+				}
+				return 0;
+			}
+			else
+			{
+				for(int i=++poss;i<sn;i++)
+				{
+					Card c=soul.get(i);
+					if(c.getPosition()!=Card.Position.OFFTABLE)
+					{
+						return field.indexOf(c);
+					}
+				}
+				return n;
+			}
+		}
 	}
 	
 	private void pdmg()
@@ -52,12 +90,14 @@ public class Player {
 		Card card=hand.get(index);
 		spendCoins(card.getCost());
 		throwHand(index);
+		boolean changeOwner=true;
 		switch(card.info.type)
 		{
 		case MINION:
 			summon0(card,posi,Card.Position.MINION);
 			break;
 		case SPELL:
+			changeOwner=false;
 			break;
 		case WEAPON:
 			equip(card);
@@ -68,7 +108,7 @@ public class Player {
 		default:
 			return;
 		}
-		card.info.doBattlecry(card,this,target,choi);
+		card.info.doBattlecry(card,changeOwner?card.getOwner():this,target,choi);
 		game.checkForDeath(true);
 		if(card.info.type==CardInfo.Type.MINION&&card.getPosition()==Card.Position.MINION)
 		{
@@ -77,16 +117,34 @@ public class Player {
 		}
 	}
 	
-	private boolean summon0(Card card,int posi,Card.Position position)
+	private boolean summon0(Card card,int posi,int poss,Card.Position position)
 	{
-		int n=getFieldNum();
-		if(n>=game.getRule().maxField)return false;
-		if(posi>n)posi=n;
+		if(field.size()>=game.getRule().maxField)return false;
 		field.add(posi,card);
+		soul.add(poss,card);
 		game.addCardToTable(card,position,this);
 		game.broadcast(Game.Msg.SUMMON,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi},{"card",card.getFullObject()}}),-1);
 		game.triggerEvent(new EnterTableEvent(card));
 		return card.getPosition()==Card.Position.MINION;
+	}
+	
+	private boolean summon0(Card card,Card near,boolean left,Card.Position position)
+	{
+		int posi=getFieldInsertIndex(near,left);
+		if(posi<0)return false;
+		int poss=soul.indexOf(near);
+		if(poss<0)poss=soul.size();
+		else if(!left)poss++;
+		return summon0(card,posi,poss,position);
+	}
+	
+	private boolean summon0(Card card,int posi,Card.Position position)
+	{
+		int n=field.size();
+		if(posi<0||posi>n)posi=n;
+		int poss=posi==n?soul.size():soul.indexOf(field.get(posi));
+		if(poss<0)return false;//should not reach here
+		return summon0(card,posi,poss,position);
 	}
 	
 	private void useHeroPower(int choi,Card target) throws GameOverThrowable
@@ -438,6 +496,22 @@ public class Player {
 		return null;
 	}
 	
+	void removeField(Card card,LeaveTableEvent.Reason reason)
+	{
+		int posi=field.indexOf(card);
+		if(posi<0)return;
+		game.triggerEvent(new LeaveTableEvent(card,reason));
+		field.remove(posi);
+		if(reason!=LeaveTableEvent.Reason.DEATH)soul.remove(card);
+		game.removeCardFromTable(card);
+		game.broadcast(Game.Msg.REMOVEMINION,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi}}),-1);
+	}
+	
+	void removeSoul(Card card)
+	{
+		soul.remove(card);
+	}
+	
 	public void addSpellPower(int num)
 	{
 		if(num==0)return;
@@ -679,6 +753,11 @@ public class Player {
 		staghelmCount--;
 	}
 	
+	public void moveFieldAway(Card card)
+	{
+		removeField(card,LeaveTableEvent.Reason.MOVE);
+	}
+	
 	public void obtain(Card card)
 	{
 		if(hand.size()>=game.getRule().maxHand)return;
@@ -699,16 +778,6 @@ public class Player {
 		return rt;
 	}
 	
-	public void removeField(Card card,LeaveTableEvent.Reason reason)
-	{
-		int posi=field.indexOf(card);
-		if(posi<0)return;
-		game.triggerEvent(new LeaveTableEvent(card,reason));
-		field.remove(posi);
-		game.removeCardFromTable(card);
-		game.broadcast(Game.Msg.REMOVEMINION,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi}}),-1);
-	}
-	
 	public void shuffle(Card card)
 	{
 		int len=deck.size();
@@ -724,14 +793,14 @@ public class Player {
 		game.broadcast(Game.Msg.SPENDCOINS,new JSONObject(new Object[][]{{"who",index},{"num",num}}),-1);
 	}
 	
-	public void summon(Card minion,int posi) throws GameOverThrowable
-	{
-		if(summon0(minion,posi,Card.Position.MINION))game.triggerEvent(new SummonEvent(minion));
-	}
-	
 	public void summon(Card minion) throws GameOverThrowable
 	{
-		summon(minion,field.size());
+		summon(minion,null,false);
+	}
+	
+	public void summon(Card minion,Card near,boolean left) throws GameOverThrowable
+	{
+		if(summon0(minion,near,left,Card.Position.MINION))game.triggerEvent(new SummonEvent(minion));
 	}
 	
 	public void takeControlOfField(Card card)

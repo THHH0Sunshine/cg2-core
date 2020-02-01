@@ -16,7 +16,7 @@ import sunshine.cg2.core.game.GameOverThrowable;
 import sunshine.cg2.core.game.Player;
 import sunshine.cg2.core.game.BuffInfo.KeyWord;
 import sunshine.cg2.core.game.CardInfo.Clz;
-import sunshine.cg2.core.game.CardInfo.Race;
+import sunshine.cg2.core.game.CardInfo.Tag;
 import sunshine.cg2.core.game.CardInfo.Type;
 import sunshine.cg2.core.game.event.DeathrattleEvent;
 import sunshine.cg2.core.game.event.Event;
@@ -28,12 +28,11 @@ import sunshine.cg2.core.game.event.globalevent.DamagedEvent;
 import sunshine.cg2.core.game.event.globalevent.EnterTableEvent;
 import sunshine.cg2.core.game.event.globalevent.HealedEvent;
 import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
-import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent.Reason;
 import sunshine.cg2.core.game.event.globalevent.SummonEvent;
 import sunshine.cg2.core.game.event.globalevent.TurnEndEvent;
 import sunshine.cg2.core.game.event.globalevent.TurnStartEvent;
 import sunshine.cg2.core.util.CardCreator;
-import sunshine.cg2.core.util.CardCreator.CardInfoAdapter;
+import sunshine.cg2.core.util.CardCreator.CardFunction;
 
 public class Cards {
 
@@ -116,6 +115,20 @@ public class Cards {
 		}
 		
 		protected abstract boolean filter(Buff buff,Card card);			
+	}
+	
+	public static class OtherMinionBuffInfo extends TableBuffInfo
+	{
+		public OtherMinionBuffInfo(BuffInfo effectInfo,String effectName,KeyWord... keyWords)
+		{
+			super(effectInfo,effectName,keyWords);
+		}
+		
+		@Override
+		protected boolean filter(Buff buff,Card card)
+		{
+			return buff.toBuff!=card&&card.getPosition()==Position.MINION;
+		}
 	}
 	
 	public static class MyMinionBuffInfo extends TableBuffInfo
@@ -286,11 +299,11 @@ public class Cards {
 		}
 	};
 	
-	public static class DamageCard extends CardInfoAdapter
+	public static class DamageFunction extends CardFunction
 	{
 		private final int damage;
 		
-		public DamageCard(int damage)
+		public DamageFunction(int damage)
 		{
 			this.damage=damage;
 		}
@@ -308,11 +321,11 @@ public class Cards {
 		}
 	}
 	
-	public static class HealingCard extends CardInfoAdapter
+	public static class HealingFunction extends CardFunction
 	{
 		private final int num;
 		
-		public HealingCard(int num)
+		public HealingFunction(int num)
 		{
 			this.num=num;
 		}
@@ -330,6 +343,22 @@ public class Cards {
 		}
 	}
 	
+	public static class SummonRightFunction extends CardFunction
+	{
+		private final String toSummon;
+		
+		public SummonRightFunction(String toSummon)
+		{
+			this.toSummon=toSummon;
+		}
+		
+		@Override
+		public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
+		{
+			player.summon(player.getGame().createCard(toSummon,-1),card,false);
+		}
+	}
+	
 	private Cards()
 	{
 	}
@@ -338,8 +367,6 @@ public class Cards {
 	{
 		DEFAULT_LIBRARY.put(card.name,card);
 	}
-	
-	public static final BuffInfo battlecry=new KWBuffInfo(KeyWord.BATTLECRY);
 	
 	public static final BuffInfo poisonous=new BuffInfo(new KeyWord[]{KeyWord.POISONOUS},new Object[]{DamagedEvent.class},false)
 	{
@@ -373,6 +400,7 @@ public class Cards {
 	/*
 	hs.basic:ajf
 	hs.basic:albkbhz
+	hs.basic:alxz
 	hs.basic:asfd
 	hs.basic:assj
 	hs.basic:aszh
@@ -389,9 +417,11 @@ public class Cards {
 	hs.basic:cs
 	hs.basic:cyzf
 	hs.basic:dcsj
+	hs.basic:dlrfs
 	hs.basic:dpgd
 	hs.basic:dr
 	hs.basic:ds
+	hs.basic:dse
 	hs.basic:dwhb
 	hs.basic:dyly
 	hs.basic:fn
@@ -399,6 +429,8 @@ public class Cards {
 	hs.basic:fss
 	hs.basic:fx
 	hs.basic:fyz
+	hs.basic:gcsxt
+	hs.basic:gtrdbs
 	hs.basic:hbj
 	hs.basic:hqs
 	hs.basic:hs
@@ -412,17 +444,22 @@ public class Cards {
 	hs.basic:kkljyws
 	hs.basic:lhzh
 	hs.basic:llzf
+	hs.basic:lqb
 	hs.basic:lryj
+	hs.basic:lszs
 	hs.basic:lwsw
 	hs.basic:lyfb
 	hs.basic:mbs
 	hs.basic:mg
 	hs.basic:mq
+	hs.basic:pscyjs
 	hs.basic:qx
 	hs.basic:sgdzy
 	hs.basic:sgs
 	hs.basic:sgsy
 	hs.basic:shwq
+	hs.basic:sjzbb
+	hs.basic:slbb
 	hs.basic:sll
 	hs.basic:slml
 	hs.basic:spz
@@ -431,8 +468,14 @@ public class Cards {
 	hs.basic:sszl
 	hs.basic:swcr
 	hs.basic:sx
+	hs.basic:sxzzrng
 	hs.basic:sys
+	hs.basic:syyz
+	hs.basic:tdls
+	hs.basic:tdlx
+	hs.basic:tlbhqs
 	hs.basic:ttzl
+	hs.basic:tzhx
 	hs.basic:wysz
 	hs.basic:wzzf
 	hs.basic:xfz
@@ -442,9 +485,12 @@ public class Cards {
 	hs.basic:xqsm
 	hs.basic:xsqy
 	hs.basic:xss
+	hs.basic:xzxml
 	hs.basic:xzzl
 	hs.basic:yhs
+	hs.basic:yjbnz
 	hs.basic:ympx
+	hs.basic:yrlcz
 	hs.basic:ys
 	hs.basic:yx
 	hs.basic:yxcz
@@ -485,6 +531,8 @@ public class Cards {
 	~hs.basic:ms
 	~hs.basic:qw
 	~hs.basic:xedd
+	~hs.basic:yrch
+	~hs.basic:yz
 	*/
 	public static final Map<String,CardInfo> DEFAULT_LIBRARY;
 	static
@@ -493,7 +541,7 @@ public class Cards {
 		CardCreator cc=new CardCreator("hs.basic");
 		CardInfo ci;
 		ci=cc.name("hpdruid").hide().clz(Clz.DRUID).type(Type.SKILL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -504,9 +552,9 @@ public class Cards {
 		register(ci);
 		register(cc.name("hdruid").hide().clz(Clz.DRUID).type(Type.HERO).cannotPlay().HP(30)
 			.skill(ci).create());
-		register(cc.name("yhs").clz(Clz.DRUID).type(Type.SPELL).function(new DamageCard(1)).create());
+		register(cc.name("yhs").clz(Clz.DRUID).type(Type.SPELL).function(new DamageFunction(1)).create());
 		register(cc.name("jh").clz(Clz.DRUID).type(Type.SPELL)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -515,7 +563,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("zj").clz(Clz.DRUID).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -524,7 +572,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("yxyj").clz(Clz.DRUID).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -536,9 +584,9 @@ public class Cards {
 					target.pp(2,2);
 				}
 			}).create());
-		register(cc.name("zlzc").clz(Clz.DRUID).type(Type.SPELL).cost(3).function(new HealingCard(8)).create());
+		register(cc.name("zlzc").clz(Clz.DRUID).type(Type.SPELL).cost(3).function(new HealingFunction(8)).create());
 		register(cc.name("yxcz").clz(Clz.DRUID).type(Type.SPELL).cost(3)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -546,7 +594,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("flgs").hide().clz(Clz.DRUID).type(Type.SPELL)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -554,7 +602,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("ympx").clz(Clz.DRUID).type(Type.SPELL).cost(3)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -564,7 +612,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("hs").clz(Clz.DRUID).type(Type.SPELL).cost(4)
-			.function(new DamageCard(4)
+			.function(new DamageFunction(4)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -577,7 +625,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("xhs").clz(Clz.DRUID).type(Type.SPELL).cost(6)
-			.function(new DamageCard(5)
+			.function(new DamageFunction(5)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -585,9 +633,9 @@ public class Cards {
 					player.draw(1);
 				}
 			}).create());
-		register(cc.name("albkbhz").clz(Clz.DRUID).type(Type.MINION).stature(8,8,8).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
+		register(cc.name("albkbhz").clz(Clz.DRUID).type(Type.MINION).stature(8,8,8).keyWords(KeyWord.TAUNT).create());
 		ci=cc.name("hphunter").hide().clz(Clz.HUNTER).type(Type.SKILL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -596,17 +644,17 @@ public class Cards {
 			}).create();
 		register(ci);
 		register(cc.name("hhunter").hide().clz(Clz.HUNTER).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
-		register(cc.name("assj").clz(Clz.HUNTER).type(Type.SPELL).cost(1).function(new DamageCard(2)).create());
-		register(cc.name("sll").clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(1,1,1)
+		register(cc.name("assj").clz(Clz.HUNTER).type(Type.SPELL).cost(1).function(new DamageFunction(2)).create());
+		register(cc.name("sll").clz(Clz.HUNTER).type(Type.MINION).tags(Tag.BEAST).stature(1,1,1)
 			.buffs(new MyOtherMinionBuffInfo(new PPEffectBuffInfo(1,0),"hs.basic:sll")
 			{
 				@Override protected boolean filter(Buff buff,Card card)
 				{
-					return super.filter(buff,card)&&card.hasRace(Race.BEAST);
+					return super.filter(buff,card)&&card.hasTag(Tag.BEAST);
 				}
 			}).create());
 		register(cc.name("zzs").clz(Clz.HUNTER).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
 				{
@@ -619,7 +667,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("lryj").clz(Clz.HUNTER).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -631,7 +679,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("dwhb").clz(Clz.HUNTER).type(Type.SPELL).cost(3)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				final String[] choices=new String[]{"~hs.basic:hf","~hs.basic:ms","~hs.basic:lok"};
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
@@ -644,16 +692,16 @@ public class Cards {
 					player.summon(player.getGame().createCard(choices[who],-1));
 				}
 			}).create());
-		register(cc.name("hf").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,4,2).buffs(new KWBuffInfo(KeyWord.CHARGE)).create());
-		register(cc.name("ms").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,4,4).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
-		register(cc.name("lok").hide().clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(3,2,4).buffs(new MyOtherMinionBuffInfo(new PPEffectBuffInfo(1,0),"~hs.basic:lok")).create());
+		register(cc.name("hf").hide().clz(Clz.HUNTER).type(Type.MINION).tags(Tag.BEAST).stature(3,4,2).keyWords(KeyWord.CHARGE).create());
+		register(cc.name("ms").hide().clz(Clz.HUNTER).type(Type.MINION).tags(Tag.BEAST).stature(3,4,4).keyWords(KeyWord.TAUNT).create());
+		register(cc.name("lok").hide().clz(Clz.HUNTER).type(Type.MINION).tags(Tag.BEAST).stature(3,2,4).buffs(new MyOtherMinionBuffInfo(new PPEffectBuffInfo(1,0),"~hs.basic:lok")).create());
 		register(cc.name("slml").clz(Clz.HUNTER).type(Type.SPELL).cost(3)
-			.function(new DamageCard(3)
+			.function(new DamageFunction(3)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					for(Card c:player.getField())
-						if(c.getPosition()==Position.MINION&&c.hasRace(Race.BEAST))
+						if(c.getPosition()==Position.MINION&&c.hasTag(Tag.BEAST))
 						{
 							target.takeDamage(card,5);
 							return;
@@ -662,7 +710,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("dcsj").clz(Clz.HUNTER).type(Type.SPELL).cost(4)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -675,14 +723,14 @@ public class Cards {
 					player.getGame().checkForDamage();
 				}
 			}).create());
-		register(cc.name("xss").clz(Clz.HUNTER).type(Type.MINION).stature(4,4,3).buffs(battlecry)
-			.function(new CardInfoAdapter()
+		register(cc.name("xss").clz(Clz.HUNTER).type(Type.MINION).stature(4,4,3)
+			.battlecry(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
 					HashSet<Card> cs=new HashSet<>();
 					for(Card c:player.getField())
-						if(c.getPosition()==Position.MINION&&c.hasRace(Race.BEAST))
+						if(c.getPosition()==Position.MINION&&c.hasTag(Tag.BEAST))
 							cs.add(c);
 					return cs.isEmpty()?target==null:cs.contains(target);
 				}
@@ -695,15 +743,15 @@ public class Cards {
 					}
 				}
 			}).create());
-		register(cc.name("tyxn").clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(5,2,5)
+		register(cc.name("tyxn").clz(Clz.HUNTER).type(Type.MINION).tags(Tag.BEAST).stature(5,2,5)
 			.buffs(new MyMinionBuffInfo(new KWEffectBuffInfo(KeyWord.CHARGE),"hs.basic:tyxn")
 			{
 				@Override protected boolean filter(Buff buff,Card card)
 				{
-					return super.filter(buff,card)&&card.hasRace(Race.BEAST);
+					return super.filter(buff,card)&&card.hasTag(Tag.BEAST);
 				}
 			}).create());
-		register(cc.name("jedtj").clz(Clz.HUNTER).type(Type.MINION).races(Race.BEAST).stature(5,3,2)
+		register(cc.name("jedtj").clz(Clz.HUNTER).type(Type.MINION).tags(Tag.BEAST).stature(5,3,2)
 			.buffs(new BuffInfo(null,new Object[]{SummonEvent.class},false)
 			{
 				@Override public void onTrigger(Buff buff,Event event)
@@ -711,15 +759,15 @@ public class Cards {
 					Card toSummon=((SummonEvent)event).minion;
 					if(toSummon==buff.toBuff)return;
 					Player player=buff.toBuff.getOwner();
-					if(toSummon.getOwner()==player&&toSummon.hasRace(Race.BEAST))
+					if(toSummon.getOwner()==player&&toSummon.hasTag(Tag.BEAST))
 						player.draw(1);
 				}
 			}).create());
-		ci=cc.name("hpmage").hide().clz(Clz.MAGE).type(Type.SKILL).cost(2).function(new DamageCard(1)).create();
+		ci=cc.name("hpmage").hide().clz(Clz.MAGE).type(Type.SKILL).cost(2).function(new DamageFunction(1)).create();
 		register(ci);
 		register(cc.name("hmage").hide().clz(Clz.MAGE).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 		register(cc.name("asfd").clz(Clz.MAGE).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -736,7 +784,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("jx").clz(Clz.MAGE).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -748,9 +796,9 @@ public class Cards {
 					for(int i=0;i<2;i++)player.summon(game.createCard("~hs.basic:jx",-1));
 				}
 			}).create());
-		register(cc.name("jx").hide().clz(Clz.MAGE).type(Type.MINION).stature(1,0,2).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
+		register(cc.name("jx").hide().clz(Clz.MAGE).type(Type.MINION).stature(1,0,2).keyWords(KeyWord.TAUNT).create());
 		register(cc.name("hbj").clz(Clz.MAGE).type(Type.SPELL).cost(2)
-			.function(new DamageCard(3)
+			.function(new DamageFunction(3)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -759,7 +807,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("mbs").clz(Clz.MAGE).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -768,7 +816,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("bsxx").clz(Clz.MAGE).type(Type.SPELL).cost(3)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -776,7 +824,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("aszh").clz(Clz.MAGE).type(Type.SPELL).cost(3)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -784,7 +832,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("bxs").clz(Clz.MAGE).type(Type.SPELL).cost(4)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -796,11 +844,11 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("my").hide().clz(Clz.NONE).type(Type.MINION).stature(1,1,1).create());
-		register(cc.name("sys").clz(Clz.MAGE).type(Type.MINION).races(Race.ELEMENT).stature(4,3,6)
+		register(cc.name("sys").clz(Clz.MAGE).type(Type.MINION).tags(Tag.ELEMENT).stature(4,3,6)
 			.buffs(freezing).create());
-		register(cc.name("hqs").clz(Clz.MAGE).type(Type.SPELL).cost(4).function(new DamageCard(6)).create());
+		register(cc.name("hqs").clz(Clz.MAGE).type(Type.SPELL).cost(4).function(new DamageFunction(6)).create());
 		register(cc.name("lyfb").clz(Clz.MAGE).type(Type.SPELL).cost(7)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -809,7 +857,7 @@ public class Cards {
 				}
 			}).create());
 		ci=cc.name("hppaladin").hide().clz(Clz.PALADIN).type(Type.SKILL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -823,7 +871,7 @@ public class Cards {
 		register(cc.name("byzsxb").hide().clz(Clz.PALADIN).type(Type.MINION).stature(1,1,1).create());
 		register(cc.name("hpaladin").hide().clz(Clz.PALADIN).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 		register(cc.name("bhzs").clz(Clz.PALADIN).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -835,7 +883,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("llzf").clz(Clz.PALADIN).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -848,7 +896,7 @@ public class Cards {
 			}).create());
 		register(cc.name("sgdzy").clz(Clz.PALADIN).type(Type.WEAPON).stature(1,1,4).create());
 		register(cc.name("qx").clz(Clz.PALADIN).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -859,14 +907,10 @@ public class Cards {
 					target.setAtk(1);
 				}
 			}).create());
-		register(cc.name("sgs").clz(Clz.PALADIN).type(Type.SPELL).cost(2).function(new HealingCard(6)).create());
+		register(cc.name("sgs").clz(Clz.PALADIN).type(Type.SPELL).cost(2).function(new HealingFunction(6)).create());
 		register(cc.name("fx").clz(Clz.PALADIN).type(Type.SPELL).cost(4)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
-				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
-				{
-					return target==null;
-				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					Player nextPlayer=player.getNextPlayer();
@@ -876,7 +920,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("fnzc").clz(Clz.PALADIN).type(Type.SPELL).cost(4)
-			.function(new DamageCard(3)
+			.function(new DamageFunction(3)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -885,7 +929,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("wzzf").clz(Clz.PALADIN).type(Type.SPELL).cost(4)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -905,15 +949,15 @@ public class Cards {
 					if(e.from==buff.toBuff.getOwner().getHero())e.from.heal(buff.toBuff,2);
 				}
 			}).create());
-		register(cc.name("lwsw").clz(Clz.PALADIN).type(Type.MINION).stature(7,5,6).buffs(battlecry)
-			.function(new CardInfoAdapter()
+		register(cc.name("lwsw").clz(Clz.PALADIN).type(Type.MINION).stature(7,5,6)
+			.battlecry(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					player.getHero().heal(card,6);
 				}
 			}).create());
-		ci=cc.name("hppriest").hide().clz(Clz.PRIEST).type(Type.SKILL).cost(2).function(new HealingCard(2)).create();
+		ci=cc.name("hppriest").hide().clz(Clz.PRIEST).type(Type.SKILL).cost(2).function(new HealingFunction(2)).create();
 		register(cc.name("hpriest").hide().clz(Clz.PRIEST).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 		register(cc.name("bjms").clz(Clz.PRIEST).type(Type.MINION).stature(1,1,3)
 			.buffs(new BuffInfo(null,new Object[]{HealedEvent.class},false)
@@ -925,7 +969,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("sgsy").clz(Clz.PRIEST).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -933,7 +977,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("xlsj").clz(Clz.PRIEST).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -944,7 +988,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("zysd").clz(Clz.PRIEST).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -956,9 +1000,9 @@ public class Cards {
 					player.draw(1);
 				}
 			}).create());
-		register(cc.name("sscj").clz(Clz.PRIEST).type(Type.SPELL).cost(1).function(new DamageCard(2)).create());
+		register(cc.name("sscj").clz(Clz.PRIEST).type(Type.SPELL).cost(1).function(new DamageFunction(2)).create());
 		register(cc.name("ayst").clz(Clz.PRIEST).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -970,7 +1014,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("sszl").clz(Clz.PRIEST).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -982,7 +1026,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("aysm").clz(Clz.PRIEST).type(Type.SPELL).cost(3)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -994,7 +1038,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("ssxx").clz(Clz.PRIEST).type(Type.SPELL).cost(5)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1009,7 +1053,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("jskz").clz(Clz.PRIEST).type(Type.SPELL).cost(10)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1021,7 +1065,7 @@ public class Cards {
 				}
 			}).create());
 		ci=cc.name("hprogue").hide().clz(Clz.PRIEST).type(Type.SKILL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1032,7 +1076,7 @@ public class Cards {
 		register(cc.name("xedd").hide().clz(Clz.ROGUE).type(Type.WEAPON).stature(1,1,2).create());
 		register(cc.name("hrogue").hide().clz(Clz.ROGUE).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 		register(cc.name("bc").clz(Clz.ROGUE).type(Type.SPELL).cost(0)
-			.function(new DamageCard(2)
+			.function(new DamageFunction(2)
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1040,7 +1084,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("yx").clz(Clz.ROGUE).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1048,7 +1092,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("zmyg").clz(Clz.ROGUE).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1060,7 +1104,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("dr").clz(Clz.ROGUE).type(Type.SPELL).cost(2)
-			.function(new DamageCard(1)
+			.function(new DamageFunction(1)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1069,7 +1113,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("mg").clz(Clz.ROGUE).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1082,13 +1126,13 @@ public class Cards {
 					if(p.getHandNum()>=game.getRule().maxHand)target.kill();
 					else
 					{
-						p.removeField(target,Reason.MOVE);
+						p.moveFieldAway(target);
 						p.obtain(game.createClear(target));
 					}
 				}
 			}).create());
 		register(cc.name("ds").clz(Clz.ROGUE).type(Type.SPELL).cost(3)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1097,8 +1141,8 @@ public class Cards {
 					player.draw(1);
 				}
 			}).create());
-		register(cc.name("wysz").clz(Clz.ROGUE).type(Type.MINION).stature(4,3,3).buffs(battlecry)
-			.function(new CardInfoAdapter()
+		register(cc.name("wysz").clz(Clz.ROGUE).type(Type.MINION).stature(4,3,3)
+			.battlecry(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1111,7 +1155,7 @@ public class Cards {
 			}).create());
 		register(cc.name("ckzr").clz(Clz.ROGUE).type(Type.WEAPON).stature(5,3,4).create());
 		register(cc.name("cs").clz(Clz.ROGUE).type(Type.SPELL).cost(5)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1123,7 +1167,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("jp").clz(Clz.ROGUE).type(Type.SPELL).cost(7)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1131,7 +1175,7 @@ public class Cards {
 				}
 			}).create());
 		ci=cc.name("hpshaman").hide().clz(Clz.SHAMAN).type(Type.SKILL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1151,9 +1195,9 @@ public class Cards {
 				}
 			}).create();
 		register(ci);
-		register(cc.fullName(basicTotems[0]).clz(Clz.SHAMAN).type(Type.MINION).races(Race.TOTEM).stature(1,1,1).create());
-		register(cc.fullName(basicTotems[1]).clz(Clz.SHAMAN).type(Type.MINION).races(Race.TOTEM).stature(1,0,2).buffs(new SpellPowerBuffInfo(1)).create());
-		register(cc.fullName(basicTotems[2]).clz(Clz.SHAMAN).type(Type.MINION).races(Race.TOTEM).stature(1,0,2)
+		register(cc.fullName(basicTotems[0]).clz(Clz.SHAMAN).type(Type.MINION).tags(Tag.TOTEM).stature(1,1,1).create());
+		register(cc.fullName(basicTotems[1]).clz(Clz.SHAMAN).type(Type.MINION).tags(Tag.TOTEM).stature(1,0,2).buffs(new SpellPowerBuffInfo(1)).create());
+		register(cc.fullName(basicTotems[2]).clz(Clz.SHAMAN).type(Type.MINION).tags(Tag.TOTEM).stature(1,0,2)
 			.buffs(new BuffInfo(null,new Object[]{TurnEndEvent.class},false)
 			{
 				@Override public void onTrigger(Buff buff,Event event)
@@ -1166,10 +1210,10 @@ public class Cards {
 					}
 				}
 			}).create());
-		register(cc.fullName(basicTotems[3]).clz(Clz.SHAMAN).type(Type.MINION).races(Race.TOTEM).stature(1,0,2).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
+		register(cc.fullName(basicTotems[3]).clz(Clz.SHAMAN).type(Type.MINION).tags(Tag.TOTEM).stature(1,0,2).keyWords(KeyWord.TAUNT).create());
 		register(cc.name("hshaman").hide().clz(Clz.SHAMAN).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 		register(cc.name("xzzl").clz(Clz.SHAMAN).type(Type.SPELL).cost(0)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1182,15 +1226,15 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("ttzl").clz(Clz.SHAMAN).type(Type.SPELL).cost(0)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
-					for(Card c:player.getAllMinions())if(c.hasRace(Race.TOTEM))c.pp(0,2);
+					for(Card c:player.getAllMinions())if(c.hasTag(Tag.TOTEM))c.pp(0,2);
 				}
 			}).create());
 		register(cc.name("bszj").clz(Clz.SHAMAN).type(Type.SPELL).cost(1)
-			.function(new DamageCard(1)
+			.function(new DamageFunction(1)
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1203,7 +1247,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("shwq").clz(Clz.SHAMAN).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1215,7 +1259,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("fn").clz(Clz.SHAMAN).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1226,9 +1270,9 @@ public class Cards {
 					target.gainBuff(new KWBuffInfo(KeyWord.WINDFURY),"hs.basic:fn",null);
 				}
 			}).create());
-		register(cc.name("hstt").clz(Clz.SHAMAN).type(Type.MINION).races(Race.TOTEM).stature(3,0,3).buffs(new NearbyMinionBuffInfo(new PPEffectBuffInfo(2,0),"hs.basic:hstt")).create());
+		register(cc.name("hstt").clz(Clz.SHAMAN).type(Type.MINION).tags(Tag.TOTEM).stature(3,0,3).buffs(new NearbyMinionBuffInfo(new PPEffectBuffInfo(2,0),"hs.basic:hstt")).create());
 		register(cc.name("ys").clz(Clz.SHAMAN).type(Type.SPELL).cost(4)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1239,9 +1283,9 @@ public class Cards {
 					target.transformField(player.getGame().createCard("~hs.basic:qw",-1),false);
 				}
 			}).create());
-		register(cc.name("qw").hide().clz(Clz.SHAMAN).type(Type.MINION).races(Race.BEAST).stature(1,0,1).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
-		register(cc.name("fyz").clz(Clz.SHAMAN).type(Type.MINION).stature(4,3,3).buffs(battlecry)
-			.function(new CardInfoAdapter()
+		register(cc.name("qw").hide().clz(Clz.SHAMAN).type(Type.MINION).tags(Tag.BEAST).stature(1,0,1).keyWords(KeyWord.TAUNT).create());
+		register(cc.name("fyz").clz(Clz.SHAMAN).type(Type.MINION).stature(4,3,3)
+			.battlecry(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1253,7 +1297,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("sx").clz(Clz.SHAMAN).type(Type.SPELL).cost(5)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1261,9 +1305,10 @@ public class Cards {
 					for(Card c:player.getField())if(c.getPosition()==Position.MINION)c.gainBuff(bi,"hs.basic:sx",null);
 				}
 			}).create());
-		register(cc.name("hys").clz(Clz.SHAMAN).type(Type.MINION).races(Race.ELEMENT).stature(6,6,5).buffs(battlecry).function(new DamageCard(3)).create());
+		register(cc.name("hys").clz(Clz.SHAMAN).type(Type.MINION).tags(Tag.ELEMENT).stature(6,6,5)
+			.battlecry(new DamageFunction(3)).create());
 		ci=cc.name("hpwarlock").hide().clz(Clz.WARLOCK).type(Type.SKILL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1274,11 +1319,11 @@ public class Cards {
 		register(ci);
 		register(cc.name("hwarlock").hide().clz(Clz.WARLOCK).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 		register(cc.name("xsqy").clz(Clz.WARLOCK).type(Type.SPELL).cost(0)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
-					return target!=null&&target.hasRace(Race.DEMON);
+					return target!=null&&target.hasTag(Tag.DEMON);
 				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1287,7 +1332,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("swcr").clz(Clz.WARLOCK).type(Type.SPELL).cost(1)
-			.function(new DamageCard(1)
+			.function(new DamageFunction(1)
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1300,7 +1345,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("lhzh").clz(Clz.WARLOCK).type(Type.SPELL).cost(1)
-			.function(new DamageCard(4)
+			.function(new DamageFunction(4)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1309,7 +1354,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("fss").clz(Clz.WARLOCK).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1320,9 +1365,9 @@ public class Cards {
 					target.gainBuff(corrupted,"hs.basic:fss",null);
 				}
 			}).create());
-		register(cc.name("xkxz").clz(Clz.WARLOCK).type(Type.MINION).races(Race.DEMON).stature(1,1,3).buffs(new KWBuffInfo(KeyWord.TAUNT)).create());
-		register(cc.name("mq").clz(Clz.WARLOCK).type(Type.MINION).races(Race.DEMON).stature(2,4,3).buffs(battlecry)
-			.function(new CardInfoAdapter()
+		register(cc.name("xkxz").clz(Clz.WARLOCK).type(Type.MINION).tags(Tag.DEMON).stature(1,1,3).keyWords(KeyWord.TAUNT).create());
+		register(cc.name("mq").clz(Clz.WARLOCK).type(Type.MINION).tags(Tag.DEMON).stature(2,4,3)
+			.battlecry(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1330,7 +1375,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("xqsm").clz(Clz.WARLOCK).type(Type.SPELL).cost(3)
-			.function(new DamageCard(2)
+			.function(new DamageFunction(2)
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1339,7 +1384,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("ayj").clz(Clz.WARLOCK).type(Type.SPELL).cost(3)
-			.function(new DamageCard(4)
+			.function(new DamageFunction(4)
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1347,7 +1392,7 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("dyly").clz(Clz.WARLOCK).type(Type.SPELL).cost(4)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1356,8 +1401,8 @@ public class Cards {
 					game.checkForDamage();
 				}
 			}).create());
-		register(cc.name("kjdyh").clz(Clz.WARLOCK).type(Type.MINION).races(Race.DEMON).stature(6,6,6).buffs(battlecry)
-			.function(new CardInfoAdapter()
+		register(cc.name("kjdyh").clz(Clz.WARLOCK).type(Type.MINION).tags(Tag.DEMON).stature(6,6,6)
+			.battlecry(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1367,7 +1412,7 @@ public class Cards {
 				}
 			}).create());
 		ci=cc.name("hpwarrior").hide().clz(Clz.WARRIOR).type(Type.SKILL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
@@ -1377,7 +1422,7 @@ public class Cards {
 		register(ci);
 		register(cc.name("hwarrior").hide().clz(Clz.WARRIOR).type(Type.HERO).cannotPlay().HP(30).skill(ci).create());
 		register(cc.name("cf").clz(Clz.WARRIOR).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1396,12 +1441,8 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("xfz").clz(Clz.WARRIOR).type(Type.SPELL).cost(1)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
-				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
-				{
-					return target==null;
-				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					Game game=player.getGame();
@@ -1410,19 +1451,15 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("yydj").clz(Clz.WARRIOR).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
-				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
-				{
-					return target==null;
-				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					player.getHero().gainBuff(new ThisTurnPPBuffInfo(4,0),"hs.basic:yydj",null);
 				}
 			}).create());
 		register(cc.name("zs").clz(Clz.WARRIOR).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1435,7 +1472,7 @@ public class Cards {
 			}).create());
 		register(cc.name("cyzf").clz(Clz.WARRIOR).type(Type.WEAPON).stature(3,3,2).create());
 		register(cc.name("spz").clz(Clz.WARRIOR).type(Type.SPELL).cost(2)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
 				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
 				{
@@ -1457,12 +1494,8 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("dpgd").clz(Clz.WARRIOR).type(Type.SPELL).cost(3)
-			.function(new CardInfoAdapter()
+			.function(new CardFunction()
 			{
-				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
-				{
-					return target==null;
-				}
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
 					player.gainArmor(5);
@@ -1470,8 +1503,81 @@ public class Cards {
 				}
 			}).create());
 		register(cc.name("kkljyws").clz(Clz.WARRIOR).type(Type.MINION).stature(4,4,3)
-			.buffs(new KWBuffInfo(KeyWord.CHARGE)).create());
+			.keyWords(KeyWord.CHARGE).create());
 		register(cc.name("ajf").clz(Clz.WARRIOR).type(Type.WEAPON).stature(5,5,2).create());
+		register(cc.name("syyz").neutralMinion().tags(Tag.BEAST).stature(1,1,1)
+			.keyWords(KeyWord.CHARGE).create());
+		register(cc.name("wy").neutralMinion().stature(1,2,1)
+			.battlecry(new HealingFunction(2)).create());
+		register(cc.name("yrxjz").neutralMinion().tags(Tag.MURLOC).stature(1,2,1).create());
+		register(cc.name("sjzbb").neutralMinion().stature(1,1,2)
+			.keyWords(KeyWord.TAUNT).create());
+		register(cc.name("alxz").neutralMinion().tags(Tag.MURLOC).stature(1,1,1)
+			.buffs(new OtherMinionBuffInfo(new PPEffectBuffInfo(1,0),"hs.basic:alxz")
+			{
+				@Override protected boolean filter(Buff buff,Card card)
+				{
+					return super.filter(buff,card)&&card.hasTag(Tag.MURLOC);
+				}
+			}).create());
+		register(cc.name("jlgjs").neutralMinion().stature(1,1,1)
+			.battlecry(new DamageFunction(1)).create());
+		register(cc.name("gcsxt").neutralMinion().stature(2,1,1)
+			.battlecry(new CardFunction()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.draw(1);
+				}
+			}).create());
+		register(cc.name("dse").neutralMinion().tags(Tag.BEAST).stature(2,2,3).create());
+		register(cc.name("xzxml").neutralMinion().tags(Tag.BEAST).stature(2,3,2).create());
+		register(cc.name("slbb").neutralMinion().stature(2,2,2)
+			.keyWords(KeyWord.TAUNT).create());
+		register(cc.name("lszs").neutralMinion().tags(Tag.MURLOC).stature(2,2,1)
+			.keyWords(KeyWord.CHARGE).create());
+		register(cc.name("yrlcz").neutralMinion().tags(Tag.MURLOC).stature(2,2,1)
+			.battlecry(new SummonRightFunction("~hs.basic:yrch")).create());
+		register(cc.name("yrch").hide().neutralMinion().tags(Tag.MURLOC).stature(1,1,1).create());
+		register(cc.name("gtrdbs").neutralMinion().stature(2,2,2)
+			.buffs(new SpellPowerBuffInfo(1)).create());
+		register(cc.name("sxzzrng").neutralMinion().stature(2,3,2)
+			.battlecry(new CardFunction()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.getNextPlayer().throwWeapon();
+				}
+			}).create());
+		register(cc.name("tdlx").neutralMinion().stature(3,2,2)
+			.buffs(new MyOtherMinionBuffInfo(new PPEffectBuffInfo(1,0),"hs.basic:tdlx")).create());
+		register(cc.name("yjbnz").neutralMinion().tags(Tag.ELEMENT).stature(3,5,1).create());
+		register(cc.name("lqb").neutralMinion().stature(3,3,1)
+			.keyWords(KeyWord.CHARGE).create());
+		register(cc.name("tdls").neutralMinion().stature(3,2,3)
+			.battlecry(new SummonRightFunction("~hs.basic:yz")).create());
+		register(cc.name("yz").hide().neutralMinion().tags(Tag.BEAST).stature(1,1,1).create());
+		register(cc.name("tzhx").neutralMinion().tags(Tag.BEAST).stature(3,3,3)
+			.keyWords(KeyWord.TAUNT).create());
+		register(cc.name("dlrfs").neutralMinion().stature(3,1,4)
+			.buffs(new SpellPowerBuffInfo(1)).create());
+		register(cc.name("tlbhqs").neutralMinion().stature(3,2,2)
+			.battlecry(new DamageFunction(1)).create());
+		register(cc.name("pscyjs").neutralMinion().stature(3,3,2)
+			.battlecry(new CardFunction()
+			{
+				@Override public boolean canTarget(Card card,Player player,Card target,int choi)
+				{
+					return target!=null&&target.getOwner()==player&&target.getPosition()==Position.MINION;
+				}
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					target.pp(1,1);
+				}
+			}).create());
+		register(cc.name("ybzz").neutralMinion().tags(Tag.BEAST).stature(3,1,4)
+			.keyWords(KeyWord.TAUNT).create());
+		//...
 	}
 	
 	public static int getTotemFlagFromField(List<? extends Card> field)

@@ -32,8 +32,8 @@ public class Game {
 	enum Msg
 	{
 		//BuffObject:{name:string,keywords:[string]}
-		//CardDisplayObject:{name:string,cost:int,atk:int,hp:int,canplay:boolean,type:string,handtags:{...}}
-		//CardFullObject:{hash:int,name:string,atk:int,maxhp:int,hp:int,shield:boolean,armor:int,buff:[BuffObject],tabletags:{...}}
+		//CardDisplayObject:{name:string,cost:int,atk:int,hp:int,canplay:boolean,type:string}
+		//CardFullObject:{hash:int,name:string,atk:int,maxhp:int,hp:int,shield:boolean,armor:int,buff:[BuffObject]}
 		NULL,
 		ASKFORDISCOVER,//{choices:[CardDisplayObject]}
 		ASKFORFIRST,
@@ -200,6 +200,7 @@ public class Game {
 				}
 			}
 			for(Card c:dying)for(Buff b:c.getAllBuffs())b.triggerSelf(new DeathrattleEvent());
+			for(Card c:dying)c.getOwner().removeSoul(c);
 			rt++;
 		}while(completely);
 		return rt;

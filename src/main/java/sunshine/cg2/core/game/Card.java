@@ -1,6 +1,5 @@
 package sunshine.cg2.core.game;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -52,7 +51,6 @@ public class Card {
 	private HealedEvent healedEvent;
 	public final CardInfo info;
 	public final int from;
-	public final HashMap<String,Object> tags=new HashMap<>();
 	
 	Card(Game game,CardInfo info,int from,int cost,int atk,int HP)
 	{
@@ -81,8 +79,7 @@ public class Card {
 			{"atk",getAtk()},
 			{"hp",HP},
 			{"canplay",info.canPlay},
-			{"type",info.type.name()},
-			{"handtags",info.getHandTags(this)}
+			{"type",info.type.name()}
 		});
 	}
 	
@@ -99,8 +96,7 @@ public class Card {
 			{"hp",HP},
 			{"shield",shield},
 			{"armor",armor},
-			{"buff",rtBuff},
-			{"tabletags",info.getTableTags(this)}
+			{"buff",rtBuff}
 		});
 	}
 	
@@ -149,7 +145,6 @@ public class Card {
 		armor=old.armor;
 		wind=old.wind;
 		for(Buff b:old.buffs)buffs.add(b);
-		tags.putAll(old.tags);
 	}
 	
 	void resetPosition()
@@ -324,10 +319,10 @@ public class Card {
 		return false;
 	}
 	
-	public boolean hasRace(CardInfo.Race race)
+	public boolean hasTag(CardInfo.Tag tag)
 	{
-		if (info.races==null)return false;
-		for(CardInfo.Race r:info.races)if(r==race)return true;
+		if (info.tags==null)return false;
+		for(CardInfo.Tag r:info.tags)if(r==tag)return true;
 		return false;
 	}
 	

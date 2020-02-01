@@ -7,19 +7,20 @@ import sunshine.cg2.core.game.Card;
 import sunshine.cg2.core.game.CardInfo;
 import sunshine.cg2.core.game.GameOverThrowable;
 import sunshine.cg2.core.game.Player;
+import sunshine.cg2.core.game.CardInfo.Tag;
 
 public class CardCreator {
 
 	private static class Impl extends CardInfo
 	{
-		private final CardInfoAdapter function;
+		private final CardFunction function;
 		
 		Impl(CardCreator creator)
 		{
 			super(
 				creator.name,
 				creator.clz,
-				creator.races(),
+				creator.tags(),
 				creator.type,
 				creator.canPlay,
 				creator.cost,
@@ -30,7 +31,7 @@ public class CardCreator {
 				creator.choices,
 				creator.skill
 			);
-			function = (creator.function == null ? new CardInfoAdapter() : creator.function);
+			function = (creator.function == null ? new CardFunction() : creator.function);
 			creator.clear();
 		}
 		
@@ -45,21 +46,9 @@ public class CardCreator {
 		{
 			function.doBattlecry(card, player, target, choi);
 		}
-		
-		@Override
-		public JSONObject getHandTags(Card card)
-		{
-			return function.getHandTags(card);
-		}
-		
-		@Override
-		public JSONObject getTableTags(Card card)
-		{
-			return function.getTableTags(card);
-		}
 	}
 	
-	public static class CardInfoAdapter
+	public static class CardFunction
 	{
 		public boolean canTarget(Card card,Player player,Card target,int choi)
 		{
@@ -69,22 +58,12 @@ public class CardCreator {
 		public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
 		{
 		}
-		
-		public JSONObject getHandTags(Card card)
-		{
-			return null;
-		}
-		
-		public JSONObject getTableTags(Card card)
-		{
-			return null;
-		}
 	}
 	
 	private String packageName;
 	private String name;
 	private CardInfo.Clz clz;
-	private final ArrayList<CardInfo.Race> races = new ArrayList<>();
+	private final ArrayList<CardInfo.Tag> tags = new ArrayList<>();
 	private CardInfo.Type type;
 	private boolean canPlay = true;
 	private int cost;
@@ -94,7 +73,7 @@ public class CardCreator {
 	private final ArrayList<BuffInfo> buffs = new ArrayList<>();
 	private int choices = 1;
 	private CardInfo skill;
-	private CardInfoAdapter function;
+	private CardFunction function;
 	
 	private BuffInfo[] buffs()
 	{
@@ -105,7 +84,7 @@ public class CardCreator {
 	{
 		name = null;
 		clz = null;
-		races.clear();
+		tags.clear();
 		type = null;
 		canPlay = true;
 		cost = 0;
@@ -118,9 +97,9 @@ public class CardCreator {
 		function = null;
 	}
 	
-	private CardInfo.Race[] races()
+	private CardInfo.Tag[] tags()
 	{
-		return races.toArray(new CardInfo.Race[0]);
+		return tags.toArray(new CardInfo.Tag[0]);
 	}
 	
 	public CardCreator(String packageName)
@@ -131,6 +110,13 @@ public class CardCreator {
 	public CardCreator atk(int atk)
 	{
 		this.atk = atk;
+		return this;
+	}
+	
+	public CardCreator battlecry(CardFunction function)
+	{
+		this.function = function;
+		this.tags.add(Tag.BATTLECRY);
 		return this;
 	}
 	
@@ -190,7 +176,7 @@ public class CardCreator {
 		return this;
 	}
 	
-	public CardCreator function(CardInfoAdapter function)
+	public CardCreator function(CardFunction function)
 	{
 		this.function = function;
 		return this;
@@ -210,16 +196,22 @@ public class CardCreator {
 		return this;
 	}
 	
+	public CardCreator keyWords(BuffInfo.KeyWord... keyWords)
+	{
+		this.buffs.add(new BuffInfo(keyWords, null, false));
+		return this;
+	}
+	
 	public CardCreator name(String name)
 	{
 		this.name = packageName + ":" + name;
 		return this;
 	}
 	
-	public CardCreator races(CardInfo.Race... races)
+	public CardCreator neutralMinion()
 	{
-		for (CardInfo.Race r: races)
-			this.races.add(r);
+		this.clz = CardInfo.Clz.NONE;
+		this.type = CardInfo.Type.MINION;
 		return this;
 	}
 	
@@ -240,6 +232,13 @@ public class CardCreator {
 		this.cost = cost;
 		this.atk = atk;
 		this.HP = HP;
+		return this;
+	}
+	
+	public CardCreator tags(CardInfo.Tag... tags)
+	{
+		for (CardInfo.Tag r: tags)
+			this.tags.add(r);
 		return this;
 	}
 	
