@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import sunshine.cg2.core.game.Game.Msg;
 import sunshine.cg2.core.game.event.globalevent.AfterTurnEndEvent;
 import sunshine.cg2.core.game.event.globalevent.EnterTableEvent;
 import sunshine.cg2.core.game.event.globalevent.LeaveTableEvent;
@@ -490,7 +489,7 @@ public class Player {
 					game.broadcast(Game.Msg.OCHANGEFIRST,new JSONObject(new Object[][]{{"who",index},{"index",j}}),index);
 				}
 			}
-			for(Card c:toshf)deck.add(fc+(int)(Math.random()*(_deck.length-fc+1)),c);
+			for(Card c:toshf)deck.add(fc+(int)(Math.random()*(deck.size()-fc+1)),c);
 		}
 		for(int j=0;j<fc;j++)draw();
 		return null;
@@ -523,10 +522,10 @@ public class Player {
 	{
 		JSONArray ja=new JSONArray(choices.length);
 		for(Card c:choices)ja.add(c.getDisplayObject());
-		game.sendto(index,Msg.ASKFORDISCOVER,new JSONObject(new Object[][]{{"choices",ja}}));
+		game.sendto(index,Game.Msg.ASKFORDISCOVER,new JSONObject(new Object[][]{{"choices",ja}}));
 		byte[] reply=game.recvfrom(index);
-		if(reply.length<=0||reply[0]<0||reply[0]>=choices.length)leave(false);
-		return reply[0];
+		if(reply.length<=0||game.getRMsg(reply[0])!=Game.RMsg.CHOOSE||reply[1]<0||reply[1]>=choices.length)leave(false);
+		return reply[1];
 	}
 	
 	public void burn()

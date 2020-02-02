@@ -1,6 +1,8 @@
 package sunshine.cg2.core.io;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import sunshine.cg2.core.game.CardSet;
@@ -12,12 +14,20 @@ import sunshine.cg2.core.util.JSONObject;
 
 public class Room implements IO {
 
+	private class LeftClient implements Client
+	{
+		@Override
+		public void send(String s)
+		{
+		}
+	}
+	
 	private class GameThread implements Runnable
 	{
 		@Override
 		public void run()
 		{
-			for(Client c:clients)c.send("{start:true}");
+			clients.forEach(c->c.send("{start:true}"));
 			CardSet[] ds=new CardSet[clients.size()];
 			String[] d=new String[20];
 			for(int i=0;i<d.length/2;i++)d[i]="hs.basic:dwhb";
@@ -25,45 +35,72 @@ public class Room implements IO {
 			for(int i=0;i<ds.length;i++)ds[i]=new CardSet("~hs.basic:hmage",d);
 			Game g=new Game(Cards.DEFAULT_LIBRARY,new String[]{"hs.basic"},Rules.HEARTHSTONE,ds,Room.this);
 			g.run();
-			for(Client c:clients)c.send("{stop:true}");
-			started=false;
+			synchronized(clients)
+			{
+				for(int i=0;i<clients.size();i++)
+				{
+					Client c=clients.get(i);
+					if(c instanceof LeftClient)clients.remove(i--);
+					else c.send("{stop:true}");
+				}
+				started=false;
+			}
 		}
 	}
 	
-	private volatile boolean started=false;
-	private final ArrayList<Client> clients=new ArrayList<>();
+	private boolean started=false;
+	private final List<Client> clients=Collections.synchronizedList(new ArrayList<Client>());
 	private int min=2;
 	private int max=2;
 	private final LinkedBlockingQueue<Reply> queue=new LinkedBlockingQueue<>();
 	
 	public boolean join(Client client)
 	{
-		return client!=null&&!started&&clients.size()<max&&!clients.contains(client)&&clients.add(client);
+		synchronized(clients)
+		{
+			return client!=null&&!started&&clients.size()<max&&!clients.contains(client)&&clients.add(client);
+		}
 	}
 	
 	public void leave(Client client)
 	{
-		if(client==null)return;
-		if(started)postMessage(client,new byte[]{0});
-		clients.remove(client);
+		synchronized(clients)
+		{
+			if(client==null)return;
+			if(started)
+			{
+				int index=clients.indexOf(client);
+				if(index<0)return;
+				client=new LeftClient();
+				clients.set(index,client);
+				postMessage(client,new byte[]{0});
+			}
+			else clients.remove(client);
+		}
 	}
 	
 	public boolean postMessage(Client client,byte[] message)
 	{
-		if(client==null||message==null||!started)return false;
-		int who=clients.indexOf(client);
-		if(who<0)return false;
-		queue.add(new Reply(who,message));
-		return true;
+		synchronized(clients)
+		{
+			if(client==null||message==null||!started)return false;
+			int who=clients.indexOf(client);
+			if(who<0)return false;
+			queue.add(new Reply(who,message));
+			return true;
+		}
 	}
 	
 	public boolean start(Client client)
 	{
-		if(client==null||started||clients.size()<min||!clients.contains(client))return false;
-		queue.clear();
-		started=true;
-		new Thread(new GameThread()).start();
-		return true;
+		synchronized(clients)
+		{
+			if(client==null||started||clients.size()<min||!clients.contains(client))return false;
+			queue.clear();
+			started=true;
+			new Thread(new GameThread()).start();
+			return true;
+		}
 	}
 	
 	@Override
