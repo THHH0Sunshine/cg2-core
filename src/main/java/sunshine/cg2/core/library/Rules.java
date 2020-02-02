@@ -36,7 +36,7 @@ public class Rules {
 		}
 		@Override public String[] getExtraFirst(int pos,int num)
 		{
-			return new String[]{"cg2:spell0"};
+			return new String[]{"~hs.basic:xyb"};
 		}
 		@Override public int getFirstCards(int pos,int num)
 		{
@@ -81,7 +81,7 @@ public class Rules {
 		}
 		@Override public String[] getExtraFirst(int pos,int num)
 		{
-			if(pos==num-1)return new String[]{"cg2:spell0"};
+			if(pos==num-1)return new String[]{"~hs.basic:xyb"};
 			return null;
 		}
 		@Override public int getFirstCards(int pos,int num)

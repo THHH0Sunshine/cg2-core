@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import sunshine.cg2.core.game.event.DeathrattleEvent;
 import sunshine.cg2.core.game.event.Event;
@@ -331,6 +332,12 @@ public class Game {
 		}
 		if(gameOver==null)
 		{
+			for(int i=0;i<players.length;i++)
+			{
+				String[] names=rule.getExtraFirst(i,players.length);
+				if(names==null)continue;
+				for(String name:names)players[i].obtain(createCard(name,-1));
+			}
 			round=1;
 			current=first;
 			broadcast(Msg.GAMESTART,null,-1);
@@ -352,6 +359,13 @@ public class Game {
 		}
 		System.out.println("====GAME OVER====\ntype="+(gameOver==null?"DRAW":gameOver.type));//game over
 		for(int i=0;i<players.length;i++)System.out.println("player"+i+":\n\tlose="+players[i].getHero().isDying());//game over
+	}
+	
+	public ArrayList<CardInfo> selectFromStandardWhere(Predicate<CardInfo> condition)
+	{
+		ArrayList<CardInfo> rt=new ArrayList<>();
+		standardCards.forEach((s,c)->{if(condition.test(c))rt.add(c);});
+		return rt;
 	}
 	
 	public void triggerEvent(Event e)

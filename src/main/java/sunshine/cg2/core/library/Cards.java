@@ -401,6 +401,7 @@ public class Cards {
 	hs.basic:ajf
 	hs.basic:albkbhz
 	hs.basic:alxz
+	hs.basic:alzyz
 	hs.basic:asfd
 	hs.basic:assj
 	hs.basic:aszh
@@ -408,15 +409,20 @@ public class Cards {
 	hs.basic:aysm
 	hs.basic:ayst
 	hs.basic:bc
+	hs.basic:bfcqs
+	hs.basic:bfcys
+	hs.basic:bfxr
 	hs.basic:bhzs
 	hs.basic:bjms
 	hs.basic:bszj
 	hs.basic:bxs
+	hs.basic:cbhwbb
 	hs.basic:cf
 	hs.basic:ckzr
 	hs.basic:cs
 	hs.basic:cyzf
 	hs.basic:dcsj
+	hs.basic:dfs
 	hs.basic:dlrfs
 	hs.basic:dpgd
 	hs.basic:dr
@@ -430,6 +436,7 @@ public class Cards {
 	hs.basic:fx
 	hs.basic:fyz
 	hs.basic:gcsxt
+	hs.basic:glbskbz
 	hs.basic:gtrdbs
 	hs.basic:hbj
 	hs.basic:hqs
@@ -437,32 +444,42 @@ public class Cards {
 	hs.basic:hstt
 	hs.basic:hys
 	hs.basic:jh
+	hs.basic:jjczz
 	hs.basic:jp
 	hs.basic:jskz
 	hs.basic:jx
+	hs.basic:jxyljg
 	hs.basic:kjdyh
 	hs.basic:kkljyws
 	hs.basic:lhzh
 	hs.basic:llzf
+	hs.basic:lmhjb
+	hs.basic:lmtzb
 	hs.basic:lqb
 	hs.basic:lryj
 	hs.basic:lszs
 	hs.basic:lwsw
 	hs.basic:lyfb
+	hs.basic:lzqzg
 	hs.basic:mbs
 	hs.basic:mg
 	hs.basic:mq
 	hs.basic:pscyjs
 	hs.basic:qx
+	hs.basic:rheq
 	hs.basic:sgdzy
 	hs.basic:sgs
 	hs.basic:sgsy
 	hs.basic:shwq
+	hs.basic:sjcdws
 	hs.basic:sjzbb
 	hs.basic:slbb
+	hs.basic:sldj
 	hs.basic:sll
 	hs.basic:slml
 	hs.basic:spz
+	hs.basic:sqsrm
+	hs.basic:srmfs
 	hs.basic:sscj
 	hs.basic:ssxx
 	hs.basic:sszl
@@ -490,6 +507,7 @@ public class Cards {
 	hs.basic:yhs
 	hs.basic:yjbnz
 	hs.basic:ympx
+	hs.basic:yrck
 	hs.basic:yrlcz
 	hs.basic:ys
 	hs.basic:yx
@@ -500,9 +518,11 @@ public class Cards {
 	hs.basic:zj
 	hs.basic:zlzc
 	hs.basic:zmyg
+	hs.basic:zrfmj
 	hs.basic:zs
 	hs.basic:zysd
 	hs.basic:zysj
+	hs.basic:zzkl
 	hs.basic:zzs
 	~hs.basic:byzsxb
 	~hs.basic:flgs
@@ -526,11 +546,13 @@ public class Cards {
 	~hs.basic:hwarlock
 	~hs.basic:hwarrior
 	~hs.basic:jx
+	~hs.basic:jxyl
 	~hs.basic:lok
 	~hs.basic:my
 	~hs.basic:ms
 	~hs.basic:qw
 	~hs.basic:xedd
+	~hs.basic:xyb
 	~hs.basic:yrch
 	~hs.basic:yz
 	*/
@@ -540,6 +562,15 @@ public class Cards {
 		DEFAULT_LIBRARY=new HashMap<String,CardInfo>();
 		CardCreator cc=new CardCreator("hs.basic");
 		CardInfo ci;
+		register(cc.name("xyb").hide().clz(Clz.NONE).type(Type.SPELL).cost(0)
+			.function(new CardFunction()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.gainEmptyCoins(1,true);
+					player.fillCoins(1);
+				}
+			}).create());
 		ci=cc.name("hpdruid").hide().clz(Clz.DRUID).type(Type.SKILL).cost(2)
 			.function(new CardFunction()
 			{
@@ -553,7 +584,7 @@ public class Cards {
 		register(cc.name("hdruid").hide().clz(Clz.DRUID).type(Type.HERO).cannotPlay().HP(30)
 			.skill(ci).create());
 		register(cc.name("yhs").clz(Clz.DRUID).type(Type.SPELL).function(new DamageFunction(1)).create());
-		register(cc.name("jh").clz(Clz.DRUID).type(Type.SPELL)
+		register(cc.name("jh").clz(Clz.DRUID).type(Type.SPELL).cost(0)
 			.function(new CardFunction()
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
@@ -1577,7 +1608,100 @@ public class Cards {
 			}).create());
 		register(cc.name("ybzz").neutralMinion().tags(Tag.BEAST).stature(3,1,4)
 			.keyWords(KeyWord.TAUNT).create());
-		//...
+		register(cc.name("lzqzg").neutralMinion().tags(Tag.BEAST).stature(4,2,7).create());
+		register(cc.name("sjcdws").neutralMinion().stature(4,3,5)
+			.keyWords(KeyWord.TAUNT).create());
+		register(cc.name("srmfs").neutralMinion().stature(4,4,4)
+			.buffs(new SpellPowerBuffInfo(1)).create());
+		register(cc.name("bfxr").neutralMinion().stature(4,4,5).create());
+		register(cc.name("jxyljg").neutralMinion().stature(4,2,4)
+			.battlecry(new SummonRightFunction("~hs.basic:jxyl")).create());
+		register(cc.name("jxyl").hide().neutralMinion().tags(Tag.MECH).stature(1,2,1).create());
+		register(cc.name("zrfmj").neutralMinion().stature(4,2,4)
+			.battlecry(new CardFunction()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.draw(1);
+				}
+			}).create());
+		register(cc.name("bfcqs").neutralMinion().stature(4,2,5)
+			.keyWords(KeyWord.CHARGE).create());
+		register(cc.name("yrck").neutralMinion().stature(5,4,4)
+			.battlecry(new CardFunction()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					player.getNextPlayer().getHero().takeDamage(card,3);
+				}
+			}).create());
+		register(cc.name("glbskbz").neutralMinion().stature(5,2,7)
+			.buffs(new BuffInfo(null,new Object[]{DamagedEvent.class},false)
+			{
+				@Override public void onTrigger(Buff buff,Event event)
+				{
+					if(((DamagedEvent)event).to!=buff.toBuff)return;
+					buff.toBuff.pp(3,0);
+				}
+			}).create());
+		register(cc.name("cbhwbb").neutralMinion().stature(5,5,4)
+			.keyWords(KeyWord.TAUNT).create());
+		register(cc.name("sldj").neutralMinion().stature(5,4,4)
+			.battlecry(new CardFunction()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					int num=player.getMinionNum()-1;
+					card.pp(num,num);
+				}
+			}).create());
+		register(cc.name("lmtzb").neutralMinion().stature(5,4,2)
+			.battlecry(new DamageFunction(2)).create());
+		register(cc.name("alzyz").neutralMinion().stature(5,4,5)
+			.battlecry(new CardFunction()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
+				{
+					for(Card c:player.getField())if(c.getPosition()==Position.MINION)c.healWithoutCheck(card,2);
+					player.getHero().healWithoutCheck(card,2);
+					player.getGame().checkForHeal();
+				}
+			}).create());
+		register(cc.name("sqsrm").neutralMinion().stature(6,6,7).create());
+		register(cc.name("lmhjb").neutralMinion().stature(6,5,2)
+			.keyWords(KeyWord.CHARGE).create());
+		register(cc.name("dfs").neutralMinion().stature(6,4,7)
+			.buffs(new SpellPowerBuffInfo(1)).create());
+		register(cc.name("jjczz").neutralMinion().stature(6,6,5)
+			.keyWords(KeyWord.TAUNT).create());
+		register(cc.name("zzkl").neutralMinion().stature(7,7,7).create());
+		register(cc.name("rheq").neutralMinion().tags(Tag.BEAST).stature(7,9,5).create());
+		register(cc.name("bfcys").neutralMinion().stature(7,6,6)
+			.buffs(new MyOtherMinionBuffInfo(new PPEffectBuffInfo(1,1),"hs.basic:bfcys")).create());
+		
+		register(cc.fullName("cg2:test").clz(Clz.NONE).type(Type.SPELL).cost(1)
+			.function(new CardFunction()
+			{
+				@Override public void doBattlecry(Card card,Player player,Card target,int choi) throws GameOverThrowable
+				{
+					Game game=player.getGame();
+					Clz clz=player.getHero().info.clz;
+					ArrayList<CardInfo> pool=game.selectFromStandardWhere(c->c.clz==clz||c.clz==Clz.NONE);
+					if(pool.size()<=0)return;
+					if(pool.size()==1){player.obtain(game.createCard(pool.get(0),-1));return;}
+					ArrayList<CardInfo> discover;
+					if(pool.size()>3)
+					{
+						discover=new ArrayList<>(3);
+						for(int i=0;i<3;i++)discover.add(pool.remove((int)(Math.random()*pool.size())));
+					}
+					else discover=pool;
+					Card[] cards=new Card[discover.size()];
+					for(int i=0;i<discover.size();i++)cards[i]=game.createCard(discover.get(i),-1);
+					int choice=player.askForDiscover(cards);
+					player.obtain(cards[choice]);
+				}
+			}).create());
 	}
 	
 	public static int getTotemFlagFromField(List<? extends Card> field)

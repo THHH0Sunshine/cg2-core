@@ -524,7 +524,7 @@ public class Player {
 		for(Card c:choices)ja.add(c.getDisplayObject());
 		game.sendto(index,Game.Msg.ASKFORDISCOVER,new JSONObject(new Object[][]{{"choices",ja}}));
 		byte[] reply=game.recvfrom(index);
-		if(reply.length<=0||game.getRMsg(reply[0])!=Game.RMsg.CHOOSE||reply[1]<0||reply[1]>=choices.length)leave(false);
+		if(reply.length<2||game.getRMsg(reply[0])!=Game.RMsg.CHOOSE||reply[1]<0||reply[1]>=choices.length)leave(false);
 		return reply[1];
 	}
 	

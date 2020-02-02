@@ -36,6 +36,7 @@ public class CardInfo {
 		ELEMENT,
 		TOTEM,
 		DEMON,
+		MECH,
 		BATTLECRY,
 		COMBO,
 	}
