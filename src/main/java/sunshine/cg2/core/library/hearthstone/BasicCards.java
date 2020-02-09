@@ -770,7 +770,7 @@ public class BasicCards
 			{
 				@Override public void doBattlecry(Card card,Player player,Card target,int choi)
 				{
-					player.equip(player.getGame().createCard("~hs.basic:bs",-1));
+					player.equip(player.getGame().createCard("~hs.basic:bs",-1),null);
 				}
 			}).create();
 		register(ci);
