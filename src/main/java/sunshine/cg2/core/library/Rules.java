@@ -1,5 +1,6 @@
 package sunshine.cg2.core.library;
 
+import sunshine.cg2.core.game.Game;
 import sunshine.cg2.core.game.Rule;
 
 public class Rules {
@@ -8,8 +9,11 @@ public class Rules {
 	{
 	}
 	
-	public static final Rule TEST=new Rule("cg2:test",10,10,999,10,7)
+	public static final Rule TEST=new Rule(10,10,999,10,7)
 	{
+		@Override public void init(Game game)
+		{
+		}
 		@Override public boolean canChangeFirst(int pos,int num)
 		{
 			return false;
@@ -44,8 +48,11 @@ public class Rules {
 		}
 	};
 	
-	public static final Rule HEARTHSTONE=new Rule("cg2:hearthstone",60,10,60,10,7)
+	public static final Rule HEARTHSTONE=new Rule(60,10,60,10,7)
 	{
+		@Override public void init(Game game)
+		{
+		}
 		@Override public boolean canChangeFirst(int pos,int num)
 		{
 			return true;

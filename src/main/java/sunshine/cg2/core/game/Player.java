@@ -1,6 +1,7 @@
 package sunshine.cg2.core.game;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -84,7 +85,7 @@ public class Player {
 		p++;
 	}
 	
-	private void playHand(int index,int posi,int choi,Card target) throws GameOverThrowable
+	private void playHand(int index,int posi,int choi,Card target,byte[] addition) throws GameOverThrowable
 	{
 		Card card=hand.get(index);
 		spendCoins(card.getCost());
@@ -93,16 +94,16 @@ public class Player {
 		switch(card.info.type)
 		{
 		case MINION:
-			summon0(card,posi,Card.Position.MINION);
+			summon0(card,posi,Card.Position.MINION,addition);
 			break;
 		case SPELL:
 			changeOwner=false;
 			break;
 		case WEAPON:
-			equip(card);
+			equip(card,addition);
 			break;
 		case HERO:
-			changeHero(card);
+			changeHero(card,addition);
 			break;
 		default:
 			return;
@@ -116,14 +117,14 @@ public class Player {
 		}
 	}
 	
-	private boolean summon0(Card card,int posi,int poss,Card.Position position)
+	private boolean summon0(Card card,int posi,int poss,Card.Position position,byte[] addition)
 	{
 		if(field.size()>=game.getRule().maxField)return false;
 		field.add(posi,card);
 		soul.add(poss,card);
 		game.addCardToTable(card,position,this);
 		game.broadcast(Game.Msg.SUMMON,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi},{"card",card.getFullObject()}}),-1);
-		game.triggerEvent(new EnterTableEvent(card));
+		game.triggerEvent(new EnterTableEvent(card,addition));
 		return card.getPosition()==Card.Position.MINION;
 	}
 	
@@ -134,16 +135,16 @@ public class Player {
 		int poss=soul.indexOf(near);
 		if(poss<0)poss=soul.size();
 		else if(!left)poss++;
-		return summon0(card,posi,poss,position);
+		return summon0(card,posi,poss,position,null);
 	}
 	
-	private boolean summon0(Card card,int posi,Card.Position position)
+	private boolean summon0(Card card,int posi,Card.Position position,byte[] addition)
 	{
 		int n=field.size();
 		if(posi<0||posi>n)posi=n;
 		int poss=posi==n?soul.size():soul.indexOf(field.get(posi));
 		if(poss<0)return false;//should not reach here
-		return summon0(card,posi,poss,position);
+		return summon0(card,posi,poss,position,addition);
 	}
 	
 	private void useHeroPower(int choi,Card target) throws GameOverThrowable
@@ -361,7 +362,7 @@ public class Player {
 					}
 				}
 				if(f)leave(false);
-				playHand(reply[1],reply[2],reply[3],target);
+				playHand(reply[1],reply[2],reply[3],target,Arrays.copyOfRange(reply,6,reply.length));
 				break;
 			case USESKILL:
 				if(skillCan==null||reply.length<4)leave(false);
@@ -535,7 +536,7 @@ public class Player {
 		game.broadcast(Game.Msg.BURN,new JSONObject(new Object[][]{{"who",index},{"card",c.getDisplayObject()}}),-1);
 	}
 	
-	public void changeHero(Card card)
+	public void changeHero(Card card,byte[] addition)
 	{
 		game.triggerEvent(new LeaveTableEvent(hero,LeaveTableEvent.Reason.CHANGEHERO));
 		game.removeCardFromTable(hero);
@@ -543,7 +544,7 @@ public class Player {
 		hero=card;
 		game.addCardToTable(card,Card.Position.HERO,this);
 		game.broadcast(Game.Msg.CHANGEHERO,new JSONObject(new Object[][]{{"who",index},{"card",card.getFullObject()}}),-1);
-		game.triggerEvent(new EnterTableEvent(card));
+		game.triggerEvent(new EnterTableEvent(card,addition));
 		if(card.info.skill!=null)changeSkill(card.info.skill);
 	}
 	
@@ -564,7 +565,7 @@ public class Player {
 			skill=game.createCard(ci,-1);
 			game.addCardToTable(skill,Card.Position.SKILL,this);
 			game.broadcast(Game.Msg.CHANGESKILL,new JSONObject(new Object[][]{{"who",index},{"card",skill.getDisplayObject()}}),-1);
-			game.triggerEvent(new EnterTableEvent(skill));
+			game.triggerEvent(new EnterTableEvent(skill,null));
 		}
 	}
 	
@@ -598,7 +599,7 @@ public class Player {
 		}
 	}
 	
-	public void equip(Card card)
+	public void equip(Card card,byte[] addition)
 	{
 		Card old=weapon;
 		if(old!=null)old.kill();
@@ -610,7 +611,7 @@ public class Player {
 			int batk=old==null?0:(old.getAtk()<0?0:old.getAtk()),aatk=card.getAtk()<0?0:card.getAtk();
 			if(batk!=aatk)hero.ppNoSilence(aatk-batk,0);
 		}
-		game.triggerEvent(new EnterTableEvent(card));
+		game.triggerEvent(new EnterTableEvent(card,addition));
 	}
 	
 	public void fillCoins(int num)
@@ -807,7 +808,19 @@ public class Player {
 		Player p=card.getOwner();
 		if(p==null||!p.field.contains(card))return;
 		p.removeField(card,LeaveTableEvent.Reason.CONTROL);
-		p.summon0(card,field.size(),Card.Position.MINION);
+		p.summon0(card,field.size(),Card.Position.MINION,null);
+	}
+	
+	public void takeControlOfWeapon(Player player)
+	{
+		Card card=player.weapon;
+		if(card==null)return;
+		player.weapon=null;
+		game.broadcast(Game.Msg.THROWWEAPON,new JSONObject(new Object[][]{{"who",player.index}}),-1);
+		if(game.getCurrentPlayer()==player&&card.getAtk()>0)player.hero.ppNoSilence(-card.getAtk(),0);
+		game.triggerEvent(new LeaveTableEvent(card,LeaveTableEvent.Reason.CONTROL));
+		game.removeCardFromTable(card);
+		equip(card,null);
 	}
 	
 	public void throwHand(int index)
@@ -831,6 +844,6 @@ public class Player {
 		int posi=field.indexOf(from);
 		if(posi<0)return;
 		removeField(from,LeaveTableEvent.Reason.TRANSFORM);
-		summon0(to,posi,ice?Card.Position.ICE:Card.Position.MINION);
+		summon0(to,posi,ice?Card.Position.ICE:Card.Position.MINION,null);
 	}
 }

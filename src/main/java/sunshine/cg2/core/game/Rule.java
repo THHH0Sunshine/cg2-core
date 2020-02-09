@@ -2,16 +2,14 @@ package sunshine.cg2.core.game;
 
 public abstract class Rule {
 
-	public final String name;
 	public final int maxRounds;
 	public final int maxHand;
 	public final int maxDeck;
 	public final int maxCoins;
 	public final int maxField;
 	
-	public Rule(String name,int maxRounds,int maxHand,int maxDeck,int maxCoins,int maxField)
+	public Rule(int maxRounds,int maxHand,int maxDeck,int maxCoins,int maxField)
 	{
-		this.name=name;
 		this.maxRounds=maxRounds;
 		this.maxHand=maxHand;
 		this.maxDeck=maxDeck;
@@ -19,6 +17,7 @@ public abstract class Rule {
 		this.maxField=maxField;
 	}
 	
+	public abstract void init(Game game);
 	public abstract boolean canChangeFirst(int pos,int num);
 	public abstract int chooseFirst(int num);
 	public abstract int getCoins(int pos);
