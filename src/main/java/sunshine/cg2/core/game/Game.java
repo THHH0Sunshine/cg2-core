@@ -132,7 +132,7 @@ public class Game {
 		while(true)
 		{
 			IO.Reply r=io.recv();
-			if(r.data.length<=0)players[r.who].leave(false);
+			if(r.data.length<=0||getRMsg(r.data[0])==RMsg.NULL)players[r.who].leave(false);
 			if(getRMsg(r.data[0])==RMsg.CONCEDE)players[r.who].leave(true);
 			if(r.who==from)return r.data;
 		}
@@ -314,15 +314,16 @@ public class Game {
 		if(gameOver==null)
 		{
 			boolean[] fs=new boolean[players.length];
-			boolean conc=false;
+			int conc=0;
 			for(int i=0;i<players.length;i++)
 			{
 				IO.Reply rep=recv();
-				if(getRMsg(rep.data[0])==RMsg.CONCEDE)conc=true;
-				if(fs[rep.who]||conc)
+				if(getRMsg(rep.data[0])==RMsg.NULL)conc=-1;
+				if(getRMsg(rep.data[0])==RMsg.CONCEDE)conc=1;
+				if(fs[rep.who]||conc!=0)
 				{
 					players[rep.who].getHero().kill();
-					gameOver=new GameOverThrowable(conc?GameOverThrowable.Type.CONCEDE:GameOverThrowable.Type.LEFT);
+					gameOver=new GameOverThrowable(conc==1?GameOverThrowable.Type.CONCEDE:GameOverThrowable.Type.LEFT);
 					break;
 				}
 				else fs[rep.who]=true;

@@ -33,6 +33,35 @@ public class Player {
 	private int staghelmCount;
 	private final ArrayList<Card> soul=new ArrayList<>();
 	
+	private void addField(Card card,int posi,int poss,Card.Position position,byte[] addition)
+	{
+		if(field.size()>=game.getRule().maxField)return;
+		field.add(posi,card);
+		soul.add(poss,card);
+		game.addCardToTable(card,position,this);
+		game.broadcast(Game.Msg.SUMMON,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi},{"card",card.getFullObject()}}),-1);
+		game.triggerEvent(new EnterTableEvent(card,addition));
+	}
+	
+	private void addField(Card card,Card near,boolean left,Card.Position position)
+	{
+		int posi=getFieldInsertIndex(near,left);
+		if(posi<0)return;
+		int poss=soul.indexOf(near);
+		if(poss<0)poss=soul.size();
+		else if(!left)poss++;
+		addField(card,posi,poss,position,null);
+	}
+	
+	private void addField(Card card,int posi,Card.Position position,byte[] addition)
+	{
+		int n=field.size();
+		if(posi<0||posi>n)posi=n;
+		int poss=posi==n?soul.size():soul.indexOf(field.get(posi));
+		if(poss<0)return;//should not reach here
+		addField(card,posi,poss,position,addition);
+	}
+	
 	private Card draw()
 	{
 		if(deck.isEmpty())return null;
@@ -94,7 +123,7 @@ public class Player {
 		switch(card.info.type)
 		{
 		case MINION:
-			summon0(card,posi,Card.Position.MINION,addition);
+			addField(card,posi,Card.Position.MINION,addition);
 			break;
 		case SPELL:
 			changeOwner=false;
@@ -115,36 +144,6 @@ public class Player {
 			game.triggerEvent(new SummonEvent(card));
 			game.checkForDeath(true);
 		}
-	}
-	
-	private boolean summon0(Card card,int posi,int poss,Card.Position position,byte[] addition)
-	{
-		if(field.size()>=game.getRule().maxField)return false;
-		field.add(posi,card);
-		soul.add(poss,card);
-		game.addCardToTable(card,position,this);
-		game.broadcast(Game.Msg.SUMMON,new JSONObject(new Object[][]{{"pIndex",index},{"mIndex",posi},{"card",card.getFullObject()}}),-1);
-		game.triggerEvent(new EnterTableEvent(card,addition));
-		return card.getPosition()==Card.Position.MINION;
-	}
-	
-	private boolean summon0(Card card,Card near,boolean left,Card.Position position)
-	{
-		int posi=getFieldInsertIndex(near,left);
-		if(posi<0)return false;
-		int poss=soul.indexOf(near);
-		if(poss<0)poss=soul.size();
-		else if(!left)poss++;
-		return summon0(card,posi,poss,position,null);
-	}
-	
-	private boolean summon0(Card card,int posi,Card.Position position,byte[] addition)
-	{
-		int n=field.size();
-		if(posi<0||posi>n)posi=n;
-		int poss=posi==n?soul.size():soul.indexOf(field.get(posi));
-		if(poss<0)return false;//should not reach here
-		return summon0(card,posi,poss,position,addition);
 	}
 	
 	private void useHeroPower(int choi,Card target) throws GameOverThrowable
@@ -800,7 +799,8 @@ public class Player {
 	
 	public void summon(Card minion,Card near,boolean left) throws GameOverThrowable
 	{
-		if(summon0(minion,near,left,Card.Position.MINION))game.triggerEvent(new SummonEvent(minion));
+		addField(minion,near,left,Card.Position.MINION);
+		if(minion.getPosition()==Card.Position.MINION)game.triggerEvent(new SummonEvent(minion));
 	}
 	
 	public void takeControlOfField(Card card)
@@ -808,7 +808,7 @@ public class Player {
 		Player p=card.getOwner();
 		if(p==null||!p.field.contains(card))return;
 		p.removeField(card,LeaveTableEvent.Reason.CONTROL);
-		p.summon0(card,field.size(),Card.Position.MINION,null);
+		p.addField(card,field.size(),Card.Position.MINION,null);
 	}
 	
 	public void takeControlOfWeapon(Player player)
@@ -844,6 +844,6 @@ public class Player {
 		int posi=field.indexOf(from);
 		if(posi<0)return;
 		removeField(from,LeaveTableEvent.Reason.TRANSFORM);
-		summon0(to,posi,ice?Card.Position.ICE:Card.Position.MINION,null);
+		addField(to,posi,ice?Card.Position.ICE:Card.Position.MINION,null);
 	}
 }
